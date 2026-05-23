@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="pl" class="bg-slate-900 text-slate-100">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Makazu-Meble — Profesjonalny Konfigurator</title>
+
+    <!-- Tailwind CSS v4 CDN -->
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+
+    <style>
+        /* ==================== SYSTEM ANIMACJI ==================== */
+        .animate-modal-enter {
+            animation: modalEnter 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .animate-modal-leave {
+            animation: modalLeave 0.2s ease-in forwards;
+        }
+
+        .animate-tile-add {
+            animation: tileAdd 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes modalEnter {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes modalLeave {
+            from {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+        }
+
+        @keyframes tileAdd {
+            from {
+                opacity: 0;
+                transform: translateX(30px) scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        /* Karuzele podglądu zlecenia – wysokość naturalna, przewijanie pionowe w #order-visual-wall */
+        .order-visual-section {
+            flex-shrink: 0;
+        }
+
+        .order-carousel-frame {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .order-carousel-track {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            align-items: stretch;
+            gap: 0.5rem;
+            padding-left: 33.333%;
+            padding-right: 33.333%;
+            scrollbar-width: none;
+        }
+
+        .order-carousel-track::-webkit-scrollbar {
+            display: none;
+        }
+
+        .order-carousel-item {
+            flex: 0 0 33.333%;
+            scroll-snap-align: center;
+            min-width: 0;
+            box-sizing: border-box;
+            opacity: 0.42;
+            filter: grayscale(0.35) brightness(0.85);
+            transform: scale(0.94);
+            transition: opacity 0.25s, filter 0.25s, transform 0.25s, border-color 0.25s;
+        }
+
+        .order-carousel-item--active {
+            opacity: 1;
+            filter: none;
+            transform: scale(1);
+            border-color: rgb(59, 130, 246);
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.15);
+        }
+
+        .order-tile-preview-host {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 8px 8px;
+        }
+
+        .order-carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 20;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 9999px;
+            background: rgba(15, 23, 42, 0.92);
+            border: 1px solid rgb(71, 85, 105);
+            color: white;
+            font-size: 1.25rem;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: opacity 0.15s, background 0.15s;
+        }
+
+        .order-carousel-btn:hover:not(:disabled) {
+            background: rgb(37, 99, 235);
+            border-color: rgb(59, 130, 246);
+        }
+
+        .order-carousel-btn:disabled {
+            opacity: 0.25;
+            cursor: not-allowed;
+        }
+
+        .order-carousel-btn--prev {
+            left: 0.25rem;
+        }
+
+        .order-carousel-btn--next {
+            right: 0.25rem;
+        }
+
+        #hero-section.hero-compact {
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        #hero-section.hero-compact h2,
+        #hero-section.hero-compact p {
+            display: none;
+        }
+
+        .led-temp-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.65rem 0.5rem;
+            border-radius: 0.75rem;
+            border: 2px solid rgb(51, 65, 85);
+            background: rgb(15, 23, 42);
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s, transform 0.15s;
+        }
+
+        .led-temp-card:hover {
+            border-color: rgb(100, 116, 139);
+        }
+
+        .led-temp-card--active {
+            border-color: rgb(59, 130, 246);
+            background: rgba(30, 58, 138, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .led-temp-swatch {
+            width: 2.75rem;
+            height: 1.25rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .led-temp-swatch--warm {
+            background: linear-gradient(90deg, #f59e0b, #fde68a);
+            box-shadow: 0 0 14px rgba(245, 158, 11, 0.75);
+        }
+
+        .led-temp-swatch--neutral {
+            background: linear-gradient(90deg, #fef3c7, #fffbeb);
+            box-shadow: 0 0 14px rgba(253, 224, 71, 0.55);
+        }
+
+        .led-temp-swatch--cool {
+            background: linear-gradient(90deg, #38bdf8, #e0f2fe);
+            box-shadow: 0 0 14px rgba(56, 189, 248, 0.75);
+        }
+
+        .order-tab-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: 1px solid rgb(51, 65, 85);
+            background: rgb(30, 41, 59);
+            color: rgb(148, 163, 184);
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+
+        .order-tab-btn:hover {
+            border-color: rgb(100, 116, 139);
+            color: rgb(226, 232, 240);
+        }
+
+        .order-tab-btn--active {
+            border-color: rgb(59, 130, 246);
+            background: rgba(30, 58, 138, 0.45);
+            color: rgb(147, 197, 253);
+        }
+
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+
+            header,
+            #hero-section,
+            .no-print,
+            footer,
+            button {
+                display: none !important;
+            }
+
+            #main-order-layout {
+                display: block !important;
+            }
+
+            #order-panel-cabinets {
+                display: none !important;
+            }
+
+            #order-panel-table {
+                display: flex !important;
+                width: 100% !important;
+            }
+
+            .order-tab-btn {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-900 text-slate-100 h-screen overflow-hidden flex flex-col">
+
+    <!-- ==================== PASEK NAWIGACJI ==================== -->
+    <header
+        class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center shadow-sm no-print">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">🪚</span>
+            <h1 class="text-xl font-black tracking-tight text-white">Makazu-Meble</h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <button id="btn-open-contractor"
+                class="bg-slate-700 hover:bg-slate-600 font-semibold text-sm px-4 py-2 rounded-xl flex items-center gap-2 cursor-pointer">
+                👤 <span id="nav-contractor-name">Dane Wykonawcy</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ==================== STRONA GŁÓWNA ==================== -->
+    <main id="app-main" class="flex-1 min-h-0 w-full mx-auto p-4 md:p-6 max-w-[1600px] flex flex-col overflow-hidden">
+
+        <div id="hero-section" class="text-center max-w-2xl mx-auto my-6 no-print">
+            <h2 class="text-3xl font-extrabold tracking-tight text-white mb-2">Konfigurator Stolarski ERP</h2>
+            <p class="text-sm text-slate-400 mb-4">
+                Zarządzaj modułami meblowymi z automatycznym skalowaniem proporcji szerokości oraz zaawansowaną kontrolą
+                szuflad.
+            </p>
+            <button id="btn-start-wizard"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-base px-6 py-3 rounded-xl shadow-lg transition transform hover:-translate-y-0.5 cursor-pointer">
+                + Dodaj element do zlecenia
+            </button>
+        </div>
+
+        <!-- ==================== ZAMÓWIENIE: ZAKŁADKI PEŁNOEKRANOWE ==================== -->
+        <div id="main-order-layout" class="hidden flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
+
+            <div id="order-view-toolbar"
+                class="shrink-0 flex flex-wrap items-center justify-between gap-3 bg-slate-800 rounded-2xl px-4 py-3 border border-slate-700 no-print">
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" id="order-tab-btn-table" class="order-tab-btn order-tab-btn--active">📋 Widok tabeli</button>
+                    <button type="button" id="order-tab-btn-cabinets" class="order-tab-btn">📐 Widok szafek</button>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button id="btn-add-order-item"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl cursor-pointer">+ Dodaj element</button>
+                    <button id="btn-print-pdf"
+                        class="bg-slate-100 text-slate-950 hover:opacity-90 font-bold text-xs px-3 py-2 rounded-xl cursor-pointer">🖨️ Drukuj / PDF</button>
+                    <button id="btn-clear-order"
+                        class="bg-red-950/30 text-red-400 hover:bg-red-950/60 font-bold text-xs px-3 py-2 rounded-xl cursor-pointer">🗑️ Wyczyść</button>
+                </div>
+            </div>
+
+            <div class="shrink-0 px-1">
+                <h3 class="text-lg font-bold text-white">Zlecenie produkcyjne</h3>
+                <div id="bom-contractor-info" class="text-xs text-slate-400 mt-0.5"></div>
+            </div>
+
+            <!-- Zakładka: tabela BOM -->
+            <div id="order-panel-table"
+                class="flex-1 min-h-0 flex flex-col bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+                <div id="tables-wrapper" class="flex-1 min-h-0 overflow-y-auto p-4 lg:p-6 space-y-6"></div>
+                <div
+                    class="shrink-0 px-4 lg:px-6 py-3 border-t border-slate-700 flex justify-between items-center text-xs text-slate-500">
+                    <span id="summary-cabinet-count" class="font-bold text-blue-400">Pozycji: 0</span>
+                    <span>Wygenerowano automatycznie przez Makazu ERP v4</span>
+                </div>
+            </div>
+
+            <!-- Zakładka: podgląd szafek -->
+            <div id="order-panel-cabinets"
+                class="hidden flex-1 min-h-0 flex flex-col bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+                <div id="order-visual-wall"
+                    class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 lg:p-6 bg-black/30 space-y-6 w-full">
+
+                    <section class="order-visual-section">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Szafki górne</h4>
+                        <div class="order-carousel-frame min-h-[4rem]">
+                            <button type="button" id="carousel-top-prev" class="order-carousel-btn order-carousel-btn--prev hidden no-print" aria-label="Poprzednia szafka górna">‹</button>
+                            <div id="order-visual-top" class="order-carousel-track"></div>
+                            <button type="button" id="carousel-top-next" class="order-carousel-btn order-carousel-btn--next hidden no-print" aria-label="Następna szafka górna">›</button>
+                            <p id="order-visual-top-empty" class="py-6 text-center text-xs text-slate-500 italic">Brak szafek górnych</p>
+                        </div>
+                    </section>
+
+                    <section id="order-visual-accessories" class="order-visual-section hidden">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Blat i oświetlenie</h4>
+                        <div id="order-visual-accessories-inner" class="flex flex-col gap-3"></div>
+                    </section>
+
+                    <section class="order-visual-section">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Szafki dolne</h4>
+                        <div class="order-carousel-frame min-h-[4rem]">
+                            <button type="button" id="carousel-bottom-prev" class="order-carousel-btn order-carousel-btn--prev hidden no-print" aria-label="Poprzednia szafka dolna">‹</button>
+                            <div id="order-visual-bottom" class="order-carousel-track"></div>
+                            <button type="button" id="carousel-bottom-next" class="order-carousel-btn order-carousel-btn--next hidden no-print" aria-label="Następna szafka dolna">›</button>
+                            <p id="order-visual-bottom-empty" class="py-6 text-center text-xs text-slate-500 italic">Brak szafek dolnych</p>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ==================== MODAL: DANE WYKONAWCY ==================== -->
+    <div id="contractor-modal"
+        class="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden transition-all duration-200">
+        <div id="contractor-modal-card"
+            class="bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-700">
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">👤 Profil Wykonawcy</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Imię i Nazwisko / Nazwa
+                        Firmy</label>
+                    <input type="text" id="input-cfg-name"
+                        class="w-full p-2.5 border border-slate-600 rounded-lg bg-transparent text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">NIP</label>
+                    <input type="text" id="input-cfg-nip"
+                        class="w-full p-2.5 border border-slate-600 rounded-lg bg-transparent text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-1">E-mail</label>
+                        <input type="email" id="input-cfg-email"
+                            class="w-full p-2.5 border border-slate-600 rounded-lg bg-transparent text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Telefon</label>
+                        <input type="tel" id="input-cfg-phone"
+                            class="w-full p-2.5 border border-slate-600 rounded-lg bg-transparent text-white">
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button id="btn-close-contractor"
+                    class="px-4 py-2 border border-slate-600 rounded-xl text-sm text-slate-300 cursor-pointer">Anuluj</button>
+                <button id="btn-save-contractor"
+                    class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-xl text-sm hover:bg-blue-700 cursor-pointer">Zapisz</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== KREATOR (WIZARD) ==================== -->
+    <div id="wizard-modal" class="fixed inset-0 bg-slate-900 z-50 flex flex-col h-screen w-screen hidden">
+        <header class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-800">
+            <div>
+                <h2 class="font-bold text-lg text-white">Nowy element zamówienia</h2>
+                <p class="text-xs text-slate-400">Konfiguracja gabarytów i podzespołów</p>
+            </div>
+            <button id="btn-close-wizard"
+                class="text-slate-500 hover:text-white text-xs border border-slate-700 px-3 py-1.5 rounded-lg bg-slate-800 cursor-pointer">
+                Anuluj
+            </button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div id="wizard-steps-container" class="lg:col-span-2 flex flex-col justify-center space-y-6">
+
+                <!-- KROK 1: KATEGORIA -->
+                <div id="step-1" class="wizard-step space-y-4">
+                    <h3 class="text-xl font-bold text-white">1. Wybierz typ asortymentu</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <button data-type="bottom"
+                            class="type-card p-4 border border-slate-700 rounded-xl flex flex-col items-center gap-2 cursor-pointer bg-slate-800 text-white">
+                            <span class="text-2xl">📥</span><span class="font-semibold text-xs">Szafka dolna</span>
+                        </button>
+                        <button data-type="top"
+                            class="type-card p-4 border border-slate-700 rounded-xl flex flex-col items-center gap-2 cursor-pointer bg-slate-800 text-white">
+                            <span class="text-2xl">📭</span><span class="font-semibold text-xs">Szafka górna</span>
+                        </button>
+                        <button data-type="countertop"
+                            class="type-card p-4 border border-slate-700 rounded-xl flex flex-col items-center gap-2 cursor-pointer bg-slate-800 text-white">
+                            <span class="text-2xl">🪵</span><span class="font-semibold text-xs">Blat roboczy</span>
+                        </button>
+                        <button data-type="led"
+                            class="type-card p-4 border border-slate-700 rounded-xl flex flex-col items-center gap-2 cursor-pointer bg-slate-800 text-white">
+                            <span class="text-2xl">💡</span><span class="font-semibold text-xs">Profil LED</span>
+                        </button>
+                    </div>
+
+                    <div id="cabinet-materials-block"
+                        class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-800">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Kolor płyty
+                                korpusu</label>
+                            <input type="text" id="input-color-body"
+                                class="w-full p-2 border border-slate-700 rounded-lg bg-slate-800 text-white"
+                                value="Biały Alpejski U12188">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Kolor / dekor
+                                frontu</label>
+                            <input type="text" id="input-color-front"
+                                class="w-full p-2 border border-slate-700 rounded-lg bg-slate-800 text-white"
+                                value="Dąb Craft Złoty K003">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">System uchwytów</label>
+                            <input type="text" id="input-handle-type"
+                                class="w-full p-2 border border-slate-700 rounded-lg bg-slate-800 text-white"
+                                value="Krawędziowy Czarny Mat">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KROK 2: WYMIARY -->
+                <div id="step-2" class="wizard-step space-y-4 hidden">
+                    <h3 id="step-2-title" class="text-xl font-bold text-white">2. Określ wymiary liniowe (mm)</h3>
+                    <div class="space-y-3 max-w-sm">
+                        <div id="dim-width-box">
+                            <label id="lbl-dim-width"
+                                class="block text-xs font-bold text-slate-400 uppercase mb-1">Szerokość</label>
+                            <input type="number" id="input-width"
+                                class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white"
+                                value="600">
+                            <div id="width-suggestions" class="flex gap-1.5 mt-1.5 flex-wrap"></div>
+                        </div>
+                        <div id="dim-height-box">
+                            <label id="lbl-dim-height"
+                                class="block text-xs font-bold text-slate-400 uppercase mb-1">Wysokość szafki</label>
+                            <input type="number" id="input-height"
+                                class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white"
+                                value="720">
+                            <div id="height-suggestions" class="flex gap-1.5 mt-1.5 flex-wrap"></div>
+                        </div>
+                    </div>
+
+                    <div id="countertop-options-block"
+                        class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-800 max-w-lg">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Kolor blatu</label>
+                            <input type="text" id="input-countertop-color" value="Dąb Werona K002"
+                                class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Grubość blatu (mm)</label>
+                            <select id="input-countertop-thickness"
+                                class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white cursor-pointer">
+                                <option value="18">18 mm — cienki</option>
+                                <option value="28">28 mm</option>
+                                <option value="38" selected>38 mm — standard</option>
+                                <option value="50">50 mm — gruby</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="led-options-block"
+                        class="hidden space-y-4 pt-4 border-t border-slate-800 max-w-lg">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Typ montażu LED</label>
+                            <select id="input-led-type"
+                                class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white cursor-pointer">
+                                <option value="recessed">Wpuszczany (we frezie)</option>
+                                <option value="surface">Nawierzchniowy (listwa)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Temperatura barwowa</label>
+                            <div id="led-temp-picker" class="flex gap-2 max-w-md" role="group" aria-label="Temperatura barwowa LED">
+                                <button type="button" class="led-temp-card" data-temp="3000K" data-swatch="warm">
+                                    <span class="led-temp-swatch led-temp-swatch--warm" aria-hidden="true"></span>
+                                    <span class="text-xs font-bold text-slate-200">Ciepła</span>
+                                    <span class="text-[10px] text-slate-500 font-mono">3000K</span>
+                                </button>
+                                <button type="button" class="led-temp-card led-temp-card--active" data-temp="4000K" data-swatch="neutral">
+                                    <span class="led-temp-swatch led-temp-swatch--neutral" aria-hidden="true"></span>
+                                    <span class="text-xs font-bold text-slate-200">Neutralna</span>
+                                    <span class="text-[10px] text-slate-500 font-mono">4000K</span>
+                                </button>
+                                <button type="button" class="led-temp-card" data-temp="6000K" data-swatch="cool">
+                                    <span class="led-temp-swatch led-temp-swatch--cool" aria-hidden="true"></span>
+                                    <span class="text-xs font-bold text-slate-200">Zimna</span>
+                                    <span class="text-[10px] text-slate-500 font-mono">6000K</span>
+                                </button>
+                            </div>
+                            <select id="input-led-temp" class="sr-only" tabindex="-1" aria-hidden="true">
+                                <option value="3000K">3000K</option>
+                                <option value="4000K" selected>4000K</option>
+                                <option value="6000K">6000K</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Kolor profilu LED</label>
+                            <input type="text" id="input-led-profile-color" value="Anodowane Srebrne"
+                                class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KROK 3: WYPOSAŻENIE -->
+                <div id="step-3" class="wizard-step space-y-4 hidden">
+                    <h3 class="text-xl font-bold text-white">3. Wyposażenie wewnętrzne i fronty</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Konstrukcja
+                                modułu</label>
+                            <div class="flex gap-3 max-w-xs">
+                                <button id="btn-opt-shelves"
+                                    class="flex-1 py-2 px-4 rounded-xl font-bold border border-slate-700 cursor-pointer">🥞
+                                    Półki</button>
+                                <button id="btn-opt-drawers"
+                                    class="flex-1 py-2 px-4 rounded-xl font-bold border border-slate-700 cursor-pointer">🗄️
+                                    Szuflady</button>
+                            </div>
+                        </div>
+
+                        <div id="ctrl-shelves" class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 max-w-md">
+                            <label class="block text-sm font-medium mb-1 text-white">Liczba półek: <span
+                                    id="lbl-shelves-count" class="font-bold text-blue-400">2</span></label>
+                            <input type="range" id="input-shelves-count" min="0" max="6" value="2"
+                                class="w-full accent-blue-600 cursor-pointer">
+                        </div>
+
+                        <div id="ctrl-drawers"
+                            class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 max-w-lg hidden space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+                                <label class="text-sm font-bold text-white">Liczba szuflad w słupku</label>
+                                <div class="flex items-center gap-2">
+                                    <button id="btn-drawer-minus"
+                                        class="w-8 h-8 flex items-center justify-center bg-slate-700 border border-slate-600 rounded-lg font-bold cursor-pointer text-white">-</button>
+                                    <span id="lbl-drawers-count" class="font-mono font-bold px-2 text-white">3</span>
+                                    <button id="btn-drawer-plus"
+                                        class="w-8 h-8 flex items-center justify-center bg-slate-700 border border-slate-600 rounded-lg font-bold cursor-pointer text-white">+</button>
+                                </div>
+                            </div>
+                            <div id="drawer-sliders-container" class="space-y-3 pt-2"></div>
+                            <label
+                                class="flex items-start gap-3 p-3 rounded-lg border border-slate-700 bg-slate-900/80 cursor-pointer">
+                                <input type="checkbox" id="input-drawer-own-sides" checked
+                                    class="mt-0.5 accent-blue-600 cursor-pointer">
+                                <span class="text-xs text-slate-300 leading-relaxed">
+                                    <span class="font-bold text-white block mb-0.5">Własne boki szuflady</span>
+                                    Odznacz, jeśli używasz systemu prowadnic z gotowymi bokami (w BOM pojawi się pozycja zestawu zamiast boków lewego i prawego).
+                                </span>
+                            </label>
+                            <div
+                                class="text-xs font-mono flex justify-between p-2 bg-slate-900 rounded-lg border border-slate-800">
+                                <span class="text-slate-500">Wysokość korpusu: <b id="info-val-height">720</b>mm</span>
+                                <span class="text-slate-500">Zajęte przez fronty: <b id="info-val-used">0</b>mm</span>
+                                <span id="info-val-status" class="font-bold text-emerald-600">Luz: 0mm</span>
+                            </div>
+                        </div>
+                        <div id="interior-validation-alert" class="p-3 rounded-xl text-xs font-medium max-w-md"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PODGLĄD TECHNICZNY -->
+            <div
+                class="bg-slate-800 rounded-2xl p-4 border border-slate-700 flex flex-col justify-between min-h-[400px]">
+                <div class="space-y-2">
+                    <div class="flex items-center gap-2 border-b border-slate-700 pb-2">
+                        <span class="text-base">💡</span>
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-400">Podgląd techniczny modułu
+                        </h4>
+                    </div>
+                    <p id="wizard-hint-text" class="text-xs text-slate-500 italic leading-relaxed"></p>
+                </div>
+
+                <div class="flex-1 bg-slate-950 rounded-xl p-4 flex items-center justify-center my-4 relative">
+                    <div id="preview-box"
+                        class="border-2 border-blue-500 bg-slate-900/60 rounded-lg p-3 flex flex-col justify-end gap-2 relative transition-all w-full max-w-[400px] min-h-[320px]">
+                    </div>
+                </div>
+                <div id="preview-footer-info" class="text-center text-xs font-mono text-slate-400">Głębokość standard
+                </div>
+            </div>
+        </main>
+
+        <footer class="p-4 border-t border-slate-800 flex justify-between items-center bg-slate-800">
+            <button id="btn-wizard-back"
+                class="px-4 py-2 border border-slate-700 rounded-xl text-xs font-medium disabled:opacity-30 cursor-pointer text-white"
+                disabled>Wstecz</button>
+            <span id="wizard-progress-lbl" class="text-xs text-slate-500 font-bold">Krok 1 z 3</span>
+            <button id="btn-wizard-next"
+                class="px-5 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 cursor-pointer">Dalej</button>
+        </footer>
+    </div>
+
+    <script src="configurator.js"></script>
+    <script src="state.js"></script>
+    <script src="storage.js"></script>
+    <script src="render.js"></script>
+    <script src="wizard.js"></script>
+    <script src="events.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
