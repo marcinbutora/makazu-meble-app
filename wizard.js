@@ -130,6 +130,148 @@ function renderDrawerSliders() {
   });
 }
 
+// Słupek: normalizacja slotów i UI
+function normalizeColumnSlots() {
+  if (wizardItem.type !== "column") return;
+  const totalH = wizardItem.dimensions.height;
+  const slots = wizardItem.columnSlots || [];
+  const minH = 100; // minimalna wysokość slotu
+
+  while (slots.length === 0)
+    slots.push({
+      kind: "shelf",
+      height: Math.max(minH, Math.floor(totalH / 3)),
+    });
+  // ensure heights array length matches
+  let sum = slots.reduce((s, v) => s + (v.height || 0), 0);
+  if (!wizardItem.columnManualAdjust || sum === 0) {
+    const base = Math.floor(totalH / slots.length);
+    let rem = totalH - base * slots.length;
+    for (let i = 0; i < slots.length; i++) {
+      slots[i].height = base + (rem > 0 ? 1 : 0);
+      if (rem > 0) rem -= 1;
+    }
+  } else {
+    // scale proportionally but respect minH
+    let s = slots.reduce((a, b) => a + (b.height || 0), 0);
+    if (s === 0) s = slots.length * minH;
+    slots.forEach((sl) => {
+      sl.height = Math.max(minH, Math.floor((sl.height * totalH) / s));
+    });
+    // adjust diff
+    let adjSum = slots.reduce((a, b) => a + (b.height || 0), 0);
+    let diff = totalH - adjSum;
+    let idx = 0;
+    while (diff !== 0 && idx < slots.length * 10) {
+      const i = idx % slots.length;
+      if (diff > 0) {
+        slots[i].height += 1;
+        diff -= 1;
+      } else if (slots[i].height > minH) {
+        slots[i].height -= 1;
+        diff += 1;
+      }
+      idx++;
+    }
+  }
+  wizardItem.columnSlots = slots;
+}
+
+function recalculateColumnDistribution() {
+  normalizeColumnSlots();
+  renderColumnSlotsUI();
+  updateInteriorStepUI();
+}
+
+function renderColumnSlotsUI() {
+  const container = document.getElementById("column-slots-container");
+  if (!container) return;
+  container.innerHTML = "";
+  (wizardItem.columnSlots || []).forEach((slot, idx) => {
+    const row = document.createElement("div");
+    row.className = "flex items-center gap-2 bg-slate-900 p-2 rounded";
+    row.innerHTML = `
+      <div class="text-xs w-6">#${idx + 1}</div>
+      <select data-idx="${idx}" class="slot-kind text-xs bg-slate-800 p-1 rounded">
+        <option value="shelf">Półka</option>
+        <option value="oven">Piekarnik</option>
+        <option value="microwave">Mikrofala</option>
+      </select>
+      <input type="number" data-idx="${idx}" class="slot-height text-xs p-1 rounded w-20" value="${slot.height}" min="50"> <span class="text-xs text-slate-400">mm</span>
+      <div class="ml-auto flex items-center gap-1">
+        <button data-action="up" data-idx="${idx}" class="px-2 py-1 bg-slate-700 rounded text-xs">▲</button>
+        <button data-action="down" data-idx="${idx}" class="px-2 py-1 bg-slate-700 rounded text-xs">▼</button>
+        <button data-action="delete" data-idx="${idx}" class="px-2 py-1 bg-red-700 rounded text-xs">Usuń</button>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+
+  // bind events
+  container.querySelectorAll(".slot-kind").forEach((sel) => {
+    sel.value = wizardItem.columnSlots[parseInt(sel.dataset.idx)].kind;
+    sel.addEventListener("change", (e) => {
+      const i = parseInt(e.target.dataset.idx);
+      wizardItem.columnSlots[i].kind = e.target.value;
+      updateInteriorStepUI();
+    });
+  });
+  container.querySelectorAll(".slot-height").forEach((inp) => {
+    inp.addEventListener("change", (e) => {
+      const i = parseInt(e.target.dataset.idx);
+      let v = parseInt(e.target.value) || 50;
+      wizardItem.columnSlots[i].height = v;
+      wizardItem.columnManualAdjust = true;
+      recalculateColumnDistribution();
+    });
+  });
+  container.querySelectorAll("button[data-action]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const act = btn.dataset.action;
+      const i = parseInt(btn.dataset.idx);
+      if (act === "up" && i > 0) {
+        const a = wizardItem.columnSlots.splice(i, 1)[0];
+        wizardItem.columnSlots.splice(i - 1, 0, a);
+      }
+      if (act === "down" && i < wizardItem.columnSlots.length - 1) {
+        const a = wizardItem.columnSlots.splice(i, 1)[0];
+        wizardItem.columnSlots.splice(i + 1, 0, a);
+      }
+      if (act === "delete") {
+        wizardItem.columnSlots.splice(i, 1);
+      }
+      recalculateColumnDistribution();
+    });
+  });
+}
+
+// bind buttons
+document.addEventListener("DOMContentLoaded", () => {
+  const add = document.getElementById("btn-column-add-slot");
+  if (add)
+    add.addEventListener("click", () => {
+      wizardItem.columnSlots.push({
+        kind: "shelf",
+        height: Math.floor(
+          wizardItem.dimensions.height / (wizardItem.columnSlots.length + 1),
+        ),
+      });
+      wizardItem.columnManualAdjust = false;
+      recalculateColumnDistribution();
+    });
+  const reset = document.getElementById("btn-column-reset");
+  if (reset)
+    reset.addEventListener("click", () => {
+      wizardItem.columnSlots = [
+        { kind: "shelf", height: 240 },
+        { kind: "shelf", height: 240 },
+        { kind: "shelf", height: 240 },
+      ];
+      wizardItem.columnManualAdjust = false;
+      recalculateColumnDistribution();
+    });
+});
+
 function updateInteriorStepUI() {
   const pBox = document.getElementById("preview-box");
   const alertEl = document.getElementById("interior-validation-alert");
@@ -328,6 +470,25 @@ function selectType(type) {
   } else {
     if (materialsBlock) materialsBlock.classList.remove("hidden");
     wizardItem.dimensions.depth = type === "top" ? 320 : 510;
+  }
+
+  // pokaż kontrolki słupka kiedy wybrano typ 'column'
+  const ctrlColumn = document.getElementById("ctrl-column");
+  if (ctrlColumn) ctrlColumn.classList.toggle("hidden", type !== "column");
+
+  if (type === "column") {
+    // ustaw domyślne sloty jeśli brak
+    if (
+      !Array.isArray(wizardItem.columnSlots) ||
+      wizardItem.columnSlots.length === 0
+    ) {
+      wizardItem.columnSlots = [
+        { kind: "shelf", height: 240 },
+        { kind: "shelf", height: 240 },
+        { kind: "shelf", height: 240 },
+      ];
+    }
+    recalculateColumnDistribution();
   }
 
   updateHintText();

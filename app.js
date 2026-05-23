@@ -34,9 +34,11 @@ function syncLedTempPickerUI() {
   const temp = wizardItem.ledColorTemperature || "4000K";
   const hidden = document.getElementById("input-led-temp");
   if (hidden) hidden.value = temp;
-  document.querySelectorAll("#led-temp-picker .led-temp-card").forEach((btn) => {
-    btn.classList.toggle("led-temp-card--active", btn.dataset.temp === temp);
-  });
+  document
+    .querySelectorAll("#led-temp-picker .led-temp-card")
+    .forEach((btn) => {
+      btn.classList.toggle("led-temp-card--active", btn.dataset.temp === temp);
+    });
 }
 
 function setLedColorTemperature(temp) {
@@ -128,7 +130,40 @@ function generateCabinetFlexTemplate(item, options = {}) {
   } else {
     // Standardowa szafka (GÓRA / DÓŁ) - identycznie jak w image_bcf4eb.png
     let interiorHtml = "";
-    if (item.interiorType === "shelves") {
+    // DODANE: obsługa typu 'column' (słupek)
+    if (item.type === "column") {
+      const slots = Array.isArray(item.columnSlots) ? item.columnSlots : [];
+      interiorHtml += `<div class="flex flex-col h-full w-full min-h-0 justify-start p-1 bg-slate-900/90 rounded-lg border border-slate-700/80 gap-1.5">`;
+      slots.forEach((sl, i) => {
+        const kind = sl.kind || "shelf";
+        const label =
+          kind === "shelf"
+            ? `PÓŁKA ${i + 1}`
+            : kind === "oven"
+              ? "PIEKARNIK"
+              : "MIKROFALA";
+        const bg =
+          kind === "shelf"
+            ? "bg-slate-800/40 border-blue-500/40"
+            : kind === "oven"
+              ? "bg-red-900/60 border-red-500/60"
+              : "bg-amber-900/50 border-amber-500/50";
+        const hVal =
+          sl.height ||
+          Math.floor(
+            (item.dimensions.height || 720) / Math.max(1, slots.length),
+          );
+        interiorHtml += `
+          <div class="flex items-center justify-center rounded-lg text-center p-2" style="flex: ${hVal} 1 0%; min-height: 36px; border:1px solid rgba(96, 165, 250,0.08);">
+            <div class="w-full">
+              <div class="text-[9px] font-bold uppercase text-slate-300">${label}</div>
+              <div class="text-xs font-mono font-bold text-blue-400">${hVal} mm</div>
+            </div>
+          </div>
+        `;
+      });
+      interiorHtml += `</div>`;
+    } else if (item.interiorType === "shelves") {
       const count = Number(item.shelvesCount) || 0;
       const sections = count + 1;
       const totalPlatesThickness = 36 + count * 18;
@@ -298,9 +333,11 @@ function closeModalAnimated(modalId, cardId) {
 }
 
 function setupEventListeners() {
-  document
-    .getElementById("btn-print-pdf")
-    .addEventListener("click", () => window.print());
+  const printBtn = document.getElementById("btn-print-pdf");
+  if (printBtn) {
+    // Tymczasowo przywracamy klasyczne drukowanie — rezygnujemy z PDFów
+    printBtn.addEventListener("click", () => window.print());
+  }
 
   document.getElementById("btn-clear-order").addEventListener("click", () => {
     if (confirm("Czy na pewno chcesz wyczyścić całe obecne zamówienie?")) {
@@ -504,6 +541,142 @@ function setupEventListeners() {
   });
 }
 
+// Generuj PDF z widoku zamówienia (rysunki szafek + tabela BOM)
+async function generateOrderPDF() {
+  if (!currentOrder || !currentOrder.length) {
+    return alert("Brak pozycji w zamówieniu do eksportu.");
+  }
+
+  const container = document.createElement("div");
+  container.id = "pdf-export-root";
+  container.style.position = "absolute";
+  container.style.left = "0";
+  container.style.top = "0";
+  container.style.zIndex = "99999";
+  container.style.width = "1200px";
+  container.style.background = "#ffffff";
+  container.style.color = "#000000";
+  container.style.padding = "16px";
+  container.style.boxSizing = "border-box";
+
+  const title = document.createElement("h1");
+  title.innerText = `Zestawienie zamówienia — ${new Date().toLocaleDateString()}`;
+  title.style.fontFamily = "Arial, Helvetica, sans-serif";
+  title.style.fontSize = "20px";
+  title.style.marginBottom = "12px";
+  container.appendChild(title);
+
+  const info = document.createElement("div");
+  info.style.marginBottom = "12px";
+  info.innerHTML = `<strong>Wykonawca:</strong> ${contractorProfile.name || "-"} &nbsp;&nbsp; <strong>NIP:</strong> ${contractorProfile.nip || "-"}`;
+  container.appendChild(info);
+
+  currentOrder.forEach((item, idx) => {
+    const section = document.createElement("section");
+    section.style.marginBottom = "18px";
+    section.style.pageBreakInside = "avoid";
+
+    const hdr = document.createElement("div");
+    hdr.innerHTML = `<h2 style="font-size:16px;margin:6px 0;">Pozycja #${idx + 1} — ${getOrderItemTypeLabel(item)}</h2>`;
+    section.appendChild(hdr);
+
+    // Rysunek i specyfikacja
+    try {
+      const html = generateCabinetFlexTemplate(item, { compact: false });
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = html;
+      section.appendChild(wrapper);
+    } catch (e) {
+      const noViz = document.createElement("div");
+      noViz.innerText = "Brak wizualnego podglądu.";
+      section.appendChild(noViz);
+    }
+
+    // BOM
+    const bomHeader = document.createElement("div");
+    bomHeader.style.marginTop = "8px";
+    bomHeader.innerHTML = `<strong>Rozpiska elementów (BOM)</strong>`;
+    section.appendChild(bomHeader);
+
+    const table = document.createElement("table");
+    table.style.width = "100%";
+    table.style.borderCollapse = "collapse";
+    table.style.fontFamily = "Arial, Helvetica, sans-serif";
+    table.style.fontSize = "12px";
+    table.innerHTML = `
+      <thead>
+        <tr style="background:#efefef;text-align:left;">
+          <th style="padding:6px;border:1px solid #ccc;width:40%">Nazwa</th>
+          <th style="padding:6px;border:1px solid #ccc;width:15%">Długość</th>
+          <th style="padding:6px;border:1px solid #ccc;width:15%">Szerokość</th>
+          <th style="padding:6px;border:1px solid #ccc;width:10%">Ilość</th>
+          <th style="padding:6px;border:1px solid #ccc;width:20%">Materiał / Uwagi</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    `;
+
+    const tbody = table.querySelector("tbody");
+    const rowsHtml =
+      typeof generateCabinetBOMRows === "function"
+        ? generateCabinetBOMRows(item, idx)
+        : "";
+    if (rowsHtml && tbody) {
+      tbody.innerHTML = rowsHtml;
+    } else if (tbody) {
+      tbody.innerHTML =
+        '<tr><td colspan="5" style="padding:6px;border:1px solid #ccc">Brak pozycji BOM</td></tr>';
+    }
+
+    section.appendChild(table);
+    container.appendChild(section);
+  });
+
+  const footer = document.createElement("div");
+  footer.style.marginTop = "12px";
+  footer.style.fontSize = "11px";
+  footer.innerHTML = "<em>Wygenerowano przez Makazu ERP</em>";
+  container.appendChild(footer);
+
+  document.body.appendChild(container);
+
+  // zachowaj stan przewijania i overflow, ustaw na górę aby html2canvas poprawnie zrenderował element
+  const prevOverflow = document.body.style.overflow;
+  const prevScroll = { x: window.scrollX, y: window.scrollY };
+  document.body.style.overflow = "hidden";
+  window.scrollTo(0, 0);
+  // krótka pauza aby style i czcionki się załadowały
+  await new Promise((res) => setTimeout(res, 200));
+
+  const opt = {
+    margin: 8,
+    filename: `zestawienie-${new Date().toISOString().slice(0, 10)}.pdf`,
+    image: { type: "jpeg", quality: 0.92 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+  };
+
+  await new Promise((resolve, reject) => {
+    try {
+      window
+        .html2pdf()
+        .set(opt)
+        .from(container)
+        .save()
+        .then(() => resolve())
+        .catch((e) => reject(e));
+    } catch (e) {
+      reject(e);
+    }
+  });
+
+  try {
+    document.body.style.overflow = prevOverflow || "";
+    window.scrollTo(prevScroll.x, prevScroll.y);
+  } catch (e) {}
+  document.body.removeChild(container);
+}
+
 // Spina zdarzenia zmian pól formularzy z dynamicznym odświeżaniem podglądu (Live Preview)
 function setupDynamicFormListeners() {
   const inputs = [
@@ -621,7 +794,8 @@ function setOrderViewTab(tab) {
   if (panelTable) panelTable.classList.toggle("hidden", !isTable);
   if (panelCabinets) panelCabinets.classList.toggle("hidden", isTable);
   if (btnTable) btnTable.classList.toggle("order-tab-btn--active", isTable);
-  if (btnCabinets) btnCabinets.classList.toggle("order-tab-btn--active", !isTable);
+  if (btnCabinets)
+    btnCabinets.classList.toggle("order-tab-btn--active", !isTable);
 
   if (!isTable) renderOrderVisualWall();
 }
@@ -669,6 +843,23 @@ function selectType(type) {
     wizardItem.dimensions.depth = type === "top" ? 320 : 510;
   }
 
+  const ctrlColumn = document.getElementById("ctrl-column");
+  if (ctrlColumn) ctrlColumn.classList.toggle("hidden", type !== "column");
+  if (type === "column") {
+    if (
+      !Array.isArray(wizardItem.columnSlots) ||
+      wizardItem.columnSlots.length === 0
+    ) {
+      wizardItem.columnSlots = [
+        { kind: "shelf", height: 240 },
+        { kind: "shelf", height: 240 },
+        { kind: "shelf", height: 240 },
+      ];
+    }
+    if (typeof recalculateColumnDistribution === "function")
+      recalculateColumnDistribution();
+  }
+
   updateHintText();
   updateInteriorStepUI();
 }
@@ -709,7 +900,7 @@ function renderWizard() {
   const stepEl = document.getElementById(`step-${currentStep}`);
   if (stepEl) stepEl.classList.remove("hidden");
 
-  const isCabinet = wizardItem.type === "bottom" || wizardItem.type === "top";
+  const isCabinet = wizardItem.type === "bottom" || wizardItem.type === "top" || wizardItem.type === "column";
   const totalSteps = isCabinet ? 3 : 2;
 
   const btnBack = document.getElementById("btn-wizard-back");
@@ -730,20 +921,49 @@ function renderWizard() {
 
   const title2 = document.getElementById("step-2-title");
   const lblWidth = document.getElementById("lbl-dim-width");
+  const lblHeight = document.getElementById("lbl-dim-height");
+  const dimWidthBox = document.getElementById("dim-width-box");
+  const dimHeightBox = document.getElementById("dim-height-box");
+  const selectorDiv = document.getElementById("interior-type-selector");
+  const ctrlColumn = document.getElementById("ctrl-column");
 
   if (wizardItem.type === "countertop") {
     if (title2) title2.innerText = "2. Parametry i wymiary blatu";
     if (lblWidth) lblWidth.innerText = "Długość całkowita blatu (mm)";
+    if (dimWidthBox) dimWidthBox.classList.remove("hidden");
+    if (dimHeightBox) dimHeightBox.classList.add("hidden");
   } else if (wizardItem.type === "led") {
     if (title2)
       title2.innerText = "2. Konfiguracja profilu oświetleniowego LED";
     if (lblWidth) lblWidth.innerText = "Długość odcinka LED (mm)";
+    if (dimWidthBox) dimWidthBox.classList.remove("hidden");
+    if (dimHeightBox) dimHeightBox.classList.add("hidden");
+  } else if (wizardItem.type === "column") {
+    if (title2) title2.innerText = "2. Wymiary słupka";
+    if (lblHeight) lblHeight.innerText = "Wysokość całkowita słupka (mm)";
+    if (dimWidthBox) dimWidthBox.classList.add("hidden");
+    if (dimHeightBox) dimHeightBox.classList.remove("hidden");
+    if (currentStep === 3) {
+      if (selectorDiv) selectorDiv.classList.add("hidden");
+      if (ctrlColumn) ctrlColumn.classList.remove("hidden");
+      if (typeof renderColumnSlotsUI === "function") renderColumnSlotsUI();
+    }
   } else {
     if (title2) title2.innerText = "2. Gabaryty zewnętrzne szafki";
     if (lblWidth) lblWidth.innerText = "Szerokość zewnętrzna korpusu (mm)";
+    if (lblHeight) lblHeight.innerText = "Wysokość szafki";
+    if (dimWidthBox) dimWidthBox.classList.remove("hidden");
+    if (dimHeightBox) dimHeightBox.classList.remove("hidden");
     if (currentStep === 3) {
+      if (selectorDiv) selectorDiv.classList.remove("hidden");
+      if (ctrlColumn) ctrlColumn.classList.add("hidden");
       setInterior(wizardItem.interiorType);
     }
+  }
+  
+  // Dla step-3 poza słupkiem, pokaż selektor
+  if (currentStep !== 3 && selectorDiv) {
+    selectorDiv.classList.remove("hidden");
   }
 
   renderSuggestions();
@@ -763,6 +983,14 @@ function renderSuggestions() {
       .map(
         (v) =>
           `<button onclick="setDim('width', ${v})" class="text-xs bg-slate-700 px-2 py-1 rounded-md cursor-pointer text-slate-200">${v} mm</button>`,
+      )
+      .join("");
+  } else if (wizardItem.type === "column") {
+    const heights = [1800, 2160, 2400];
+    if (hSugg) hSugg.innerHTML = heights
+      .map(
+        (v) =>
+          `<button onclick="setDim('height', ${v})" class="text-xs bg-slate-700 px-2 py-1 rounded-md cursor-pointer text-slate-200">${v} mm</button>`,
       )
       .join("");
   } else {
@@ -1031,11 +1259,32 @@ function createOrderVisualTile(item, index) {
   tile.addEventListener("click", (e) => {
     if (e.target.closest("[data-order-delete]")) return;
     if (!tile.classList.contains("order-carousel-item--active")) {
+      // przewiń do klikniętej pozycji i natychmiast zaktualizuj aktywny element
+      const track = tile.closest(".order-carousel-track");
       tile.scrollIntoView({
         inline: "center",
         block: "nearest",
         behavior: "smooth",
       });
+      // Po krótkim czasie wymuś aktualizację (gdy scroll zakończy lub ruszy)
+      setTimeout(() => {
+        if (track) {
+          try {
+            updateCarouselActiveSlide(track);
+            refreshOrderCarouselButtons(
+              track,
+              track
+                .closest(".order-carousel-frame")
+                ?.querySelector(".order-carousel-btn--prev"),
+              track
+                .closest(".order-carousel-frame")
+                ?.querySelector(".order-carousel-btn--next"),
+            );
+          } catch (err) {
+            /* silent */
+          }
+        }
+      }, 220);
       return;
     }
     editOrderItem(index);
@@ -1147,9 +1396,34 @@ function initCarouselTrack(trackEl) {
 function populateOrderCarousel(trackEl, entries) {
   if (!trackEl) return;
   trackEl.innerHTML = "";
+  const count = entries.length;
+  // określ szerokość pojedynczego elementu w procentach (równy podział)
+  const itemPercent = count > 0 ? 100 / count : 33.333;
+  // padding zabezpieczający centrowanie pierwszego i ostatniego elementu
+  const isMobile = window.innerWidth <= 768;
+  const sidePadding = isMobile ? 0 : (100 - itemPercent) / 2;
+
   entries.forEach(({ item, index }) => {
-    trackEl.appendChild(createOrderVisualTile(item, index));
+    const tile = createOrderVisualTile(item, index);
+    // zastosuj inline style by nadpisać domyślne CSS
+    if (isMobile) {
+      // na mobilu: pierwsza pozycja full width, reszta przewijana (węższa)
+      if (index === 0) {
+        tile.style.flex = `0 0 100%`;
+      } else {
+        tile.style.flex = `0 0 80%`;
+      }
+    } else {
+      tile.style.flex = `0 0 ${itemPercent}%`;
+    }
+    tile.style.minWidth = `0`;
+    trackEl.appendChild(tile);
   });
+
+  // ustaw padding tracka w procentach, aby można było centrować elementy niezależnie od ich szerokości
+  trackEl.style.paddingLeft = `${sidePadding}%`;
+  trackEl.style.paddingRight = `${sidePadding}%`;
+
   initCarouselTrack(trackEl);
 }
 
@@ -1158,8 +1432,12 @@ function renderOrderVisualWall() {
   const bottomTrack = document.getElementById("order-visual-bottom");
   const topEmpty = document.getElementById("order-visual-top-empty");
   const bottomEmpty = document.getElementById("order-visual-bottom-empty");
-  const accessoriesSection = document.getElementById("order-visual-accessories");
-  const accessoriesInner = document.getElementById("order-visual-accessories-inner");
+  const accessoriesSection = document.getElementById(
+    "order-visual-accessories",
+  );
+  const accessoriesInner = document.getElementById(
+    "order-visual-accessories-inner",
+  );
 
   const topEntries = [];
   const bottomEntries = [];
@@ -1200,7 +1478,10 @@ function renderOrderVisualWall() {
     });
   }
   if (accessoriesSection) {
-    accessoriesSection.classList.toggle("hidden", accessoryEntries.length === 0);
+    accessoriesSection.classList.toggle(
+      "hidden",
+      accessoryEntries.length === 0,
+    );
   }
 
   requestAnimationFrame(() => {
@@ -1372,9 +1653,7 @@ function updateMainUI() {
 
 function generateCabinetBOMRows(item, idx) {
   const parts =
-    typeof calculateItemBOM === "function"
-      ? calculateItemBOM(item, idx)
-      : [];
+    typeof calculateItemBOM === "function" ? calculateItemBOM(item, idx) : [];
 
   return parts
     .map(

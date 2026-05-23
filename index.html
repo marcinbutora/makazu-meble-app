@@ -77,8 +77,8 @@
             -webkit-overflow-scrolling: touch;
             align-items: stretch;
             gap: 0.5rem;
-            padding-left: 33.333%;
-            padding-right: 33.333%;
+            padding-left: 0;
+            padding-right: 0;
             scrollbar-width: none;
         }
 
@@ -87,7 +87,7 @@
         }
 
         .order-carousel-item {
-            flex: 0 0 33.333%;
+            flex: 0 0 auto;
             scroll-snap-align: center;
             min-width: 0;
             box-sizing: border-box;
@@ -302,16 +302,20 @@
             <div id="order-view-toolbar"
                 class="shrink-0 flex flex-wrap items-center justify-between gap-3 bg-slate-800 rounded-2xl px-4 py-3 border border-slate-700 no-print">
                 <div class="flex flex-wrap items-center gap-2">
-                    <button type="button" id="order-tab-btn-table" class="order-tab-btn order-tab-btn--active">📋 Widok tabeli</button>
+                    <button type="button" id="order-tab-btn-table" class="order-tab-btn order-tab-btn--active">📋 Widok
+                        tabeli</button>
                     <button type="button" id="order-tab-btn-cabinets" class="order-tab-btn">📐 Widok szafek</button>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <button id="btn-add-order-item"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl cursor-pointer">+ Dodaj element</button>
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl cursor-pointer">+
+                        Dodaj element</button>
                     <button id="btn-print-pdf"
-                        class="bg-slate-100 text-slate-950 hover:opacity-90 font-bold text-xs px-3 py-2 rounded-xl cursor-pointer">🖨️ Drukuj / PDF</button>
+                        class="bg-slate-100 text-slate-950 hover:opacity-90 font-bold text-xs px-3 py-2 rounded-xl cursor-pointer">🖨️
+                        Drukuj / PDF</button>
                     <button id="btn-clear-order"
-                        class="bg-red-950/30 text-red-400 hover:bg-red-950/60 font-bold text-xs px-3 py-2 rounded-xl cursor-pointer">🗑️ Wyczyść</button>
+                        class="bg-red-950/30 text-red-400 hover:bg-red-950/60 font-bold text-xs px-3 py-2 rounded-xl cursor-pointer">🗑️
+                        Wyczyść</button>
                 </div>
             </div>
 
@@ -340,25 +344,36 @@
                     <section class="order-visual-section">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Szafki górne</h4>
                         <div class="order-carousel-frame min-h-[4rem]">
-                            <button type="button" id="carousel-top-prev" class="order-carousel-btn order-carousel-btn--prev hidden no-print" aria-label="Poprzednia szafka górna">‹</button>
+                            <button type="button" id="carousel-top-prev"
+                                class="order-carousel-btn order-carousel-btn--prev hidden no-print"
+                                aria-label="Poprzednia szafka górna">‹</button>
                             <div id="order-visual-top" class="order-carousel-track"></div>
-                            <button type="button" id="carousel-top-next" class="order-carousel-btn order-carousel-btn--next hidden no-print" aria-label="Następna szafka górna">›</button>
-                            <p id="order-visual-top-empty" class="py-6 text-center text-xs text-slate-500 italic">Brak szafek górnych</p>
+                            <button type="button" id="carousel-top-next"
+                                class="order-carousel-btn order-carousel-btn--next hidden no-print"
+                                aria-label="Następna szafka górna">›</button>
+                            <p id="order-visual-top-empty" class="py-6 text-center text-xs text-slate-500 italic">Brak
+                                szafek górnych</p>
                         </div>
                     </section>
 
                     <section id="order-visual-accessories" class="order-visual-section hidden">
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Blat i oświetlenie</h4>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Blat i oświetlenie
+                        </h4>
                         <div id="order-visual-accessories-inner" class="flex flex-col gap-3"></div>
                     </section>
 
                     <section class="order-visual-section">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Szafki dolne</h4>
                         <div class="order-carousel-frame min-h-[4rem]">
-                            <button type="button" id="carousel-bottom-prev" class="order-carousel-btn order-carousel-btn--prev hidden no-print" aria-label="Poprzednia szafka dolna">‹</button>
+                            <button type="button" id="carousel-bottom-prev"
+                                class="order-carousel-btn order-carousel-btn--prev hidden no-print"
+                                aria-label="Poprzednia szafka dolna">‹</button>
                             <div id="order-visual-bottom" class="order-carousel-track"></div>
-                            <button type="button" id="carousel-bottom-next" class="order-carousel-btn order-carousel-btn--next hidden no-print" aria-label="Następna szafka dolna">›</button>
-                            <p id="order-visual-bottom-empty" class="py-6 text-center text-xs text-slate-500 italic">Brak szafek dolnych</p>
+                            <button type="button" id="carousel-bottom-next"
+                                class="order-carousel-btn order-carousel-btn--next hidden no-print"
+                                aria-label="Następna szafka dolna">›</button>
+                            <p id="order-visual-bottom-empty" class="py-6 text-center text-xs text-slate-500 italic">
+                                Brak szafek dolnych</p>
                         </div>
                     </section>
                 </div>
@@ -442,6 +457,10 @@
                             class="type-card p-4 border border-slate-700 rounded-xl flex flex-col items-center gap-2 cursor-pointer bg-slate-800 text-white">
                             <span class="text-2xl">💡</span><span class="font-semibold text-xs">Profil LED</span>
                         </button>
+                        <button data-type="column"
+                            class="type-card p-4 border border-slate-700 rounded-xl flex flex-col items-center gap-2 cursor-pointer bg-slate-800 text-white">
+                            <span class="text-2xl">🔲</span><span class="font-semibold text-xs">Słupek</span>
+                        </button>
                     </div>
 
                     <div id="cabinet-materials-block"
@@ -499,7 +518,8 @@
                                 class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Grubość blatu (mm)</label>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Grubość blatu
+                                (mm)</label>
                             <select id="input-countertop-thickness"
                                 class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white cursor-pointer">
                                 <option value="18">18 mm — cienki</option>
@@ -510,8 +530,7 @@
                         </div>
                     </div>
 
-                    <div id="led-options-block"
-                        class="hidden space-y-4 pt-4 border-t border-slate-800 max-w-lg">
+                    <div id="led-options-block" class="hidden space-y-4 pt-4 border-t border-slate-800 max-w-lg">
                         <div>
                             <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Typ montażu LED</label>
                             <select id="input-led-type"
@@ -521,14 +540,17 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Temperatura barwowa</label>
-                            <div id="led-temp-picker" class="flex gap-2 max-w-md" role="group" aria-label="Temperatura barwowa LED">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Temperatura
+                                barwowa</label>
+                            <div id="led-temp-picker" class="flex gap-2 max-w-md" role="group"
+                                aria-label="Temperatura barwowa LED">
                                 <button type="button" class="led-temp-card" data-temp="3000K" data-swatch="warm">
                                     <span class="led-temp-swatch led-temp-swatch--warm" aria-hidden="true"></span>
                                     <span class="text-xs font-bold text-slate-200">Ciepła</span>
                                     <span class="text-[10px] text-slate-500 font-mono">3000K</span>
                                 </button>
-                                <button type="button" class="led-temp-card led-temp-card--active" data-temp="4000K" data-swatch="neutral">
+                                <button type="button" class="led-temp-card led-temp-card--active" data-temp="4000K"
+                                    data-swatch="neutral">
                                     <span class="led-temp-swatch led-temp-swatch--neutral" aria-hidden="true"></span>
                                     <span class="text-xs font-bold text-slate-200">Neutralna</span>
                                     <span class="text-[10px] text-slate-500 font-mono">4000K</span>
@@ -546,7 +568,8 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Kolor profilu LED</label>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Kolor profilu
+                                LED</label>
                             <input type="text" id="input-led-profile-color" value="Anodowane Srebrne"
                                 class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white">
                         </div>
@@ -557,7 +580,7 @@
                 <div id="step-3" class="wizard-step space-y-4 hidden">
                     <h3 class="text-xl font-bold text-white">3. Wyposażenie wewnętrzne i fronty</h3>
                     <div class="space-y-4">
-                        <div>
+                        <div id="interior-type-selector">
                             <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Konstrukcja
                                 modułu</label>
                             <div class="flex gap-3 max-w-xs">
@@ -596,7 +619,8 @@
                                     class="mt-0.5 accent-blue-600 cursor-pointer">
                                 <span class="text-xs text-slate-300 leading-relaxed">
                                     <span class="font-bold text-white block mb-0.5">Własne boki szuflady</span>
-                                    Odznacz, jeśli używasz systemu prowadnic z gotowymi bokami (w BOM pojawi się pozycja zestawu zamiast boków lewego i prawego).
+                                    Odznacz, jeśli używasz systemu prowadnic z gotowymi bokami (w BOM pojawi się pozycja
+                                    zestawu zamiast boków lewego i prawego).
                                 </span>
                             </label>
                             <div
@@ -605,6 +629,21 @@
                                 <span class="text-slate-500">Zajęte przez fronty: <b id="info-val-used">0</b>mm</span>
                                 <span id="info-val-status" class="font-bold text-emerald-600">Luz: 0mm</span>
                             </div>
+                        </div>
+                        <div id="ctrl-column"
+                            class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 max-w-lg hidden space-y-4">
+                            <div class="flex items-center justify-between">
+                                <label class="text-sm font-bold text-white">Słupek — układ pionowy</label>
+                                <div class="flex items-center gap-2">
+                                    <button id="btn-column-add-slot" class="px-2 py-1 bg-blue-600 rounded text-xs">Dodaj
+                                        półkę</button>
+                                    <button id="btn-column-reset"
+                                        class="px-2 py-1 bg-slate-700 rounded text-xs">Reset</button>
+                                </div>
+                            </div>
+                            <div class="text-xs text-slate-400">Ustaw wysokość korpusu w kroku 2. Poniżej ustawisz
+                                kolejność półek i wyposażenia.</div>
+                            <div id="column-slots-container" class="space-y-2 pt-2"></div>
                         </div>
                         <div id="interior-validation-alert" class="p-3 rounded-xl text-xs font-medium max-w-md"></div>
                     </div>
@@ -649,6 +688,8 @@
     <script src="render.js"></script>
     <script src="wizard.js"></script>
     <script src="events.js"></script>
+    <!-- html2pdf.bundle zawiera html2canvas + jsPDF i obsługuje multi-page PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
     <script src="app.js"></script>
 </body>
 

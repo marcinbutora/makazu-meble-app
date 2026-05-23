@@ -24,6 +24,11 @@ let wizardItem = {
   ledProfileColor: "Anodowane Srebrne",
 };
 
+// Format dla słupka (column): tablica slotów od góry do dołu
+// każdy slot: { kind: 'shelf'|'oven'|'microwave', height: number }
+wizardItem.columnSlots = [{ kind: 'shelf', height: 240 }, { kind: 'shelf', height: 240 }, { kind: 'shelf', height: 240 }];
+wizardItem.columnManualAdjust = false;
+
 const ADVISOR_HINTS = {
   step1: {
     bottom: "Szafka dolna standardowa. Głębokość korpusu wynosi 510mm.",
@@ -31,6 +36,7 @@ const ADVISOR_HINTS = {
     countertop:
       "Blat kuchenny. Możesz zdefiniować długość, głębokość, grubość oraz dekor.",
     led: "Profil oświetleniowy LED. Wybierz typ profilu, barwę światła oraz długość odcinka.",
+    column: "Słupek pionowy. Ustaw wysokość, dodaj półki i zdefiniuj miejsce na AGD (piekarnik, mikrofala). Możesz zmieniać kolejność i wysokości slotów.",
   },
   step2:
     "Określ wymiary gabarytowe oraz parametry techniczne i wizualne wybranego elementu.",
