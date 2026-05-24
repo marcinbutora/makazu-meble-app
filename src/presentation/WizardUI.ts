@@ -292,8 +292,10 @@ export class WizardUI {
     const title2 = this.renderer.getEl("step-2-title");
     const lblW = this.renderer.getEl("lbl-dim-width");
     const lblH = this.renderer.getEl("lbl-dim-height");
+    const lblD = this.renderer.getEl("lbl-dim-depth");
     const dimW = this.renderer.getEl("dim-width-box");
     const dimH = this.renderer.getEl("dim-height-box");
+    const dimD = this.renderer.getEl("dim-depth-box");
     const interiorSel = this.renderer.getEl("interior-type-selector");
     const ctrlShelves = this.renderer.getEl("ctrl-shelves");
     const ctrlDrawers = this.renderer.getEl("ctrl-drawers");
@@ -303,17 +305,20 @@ export class WizardUI {
       if (lblW) lblW.innerText = "Długość całkowita blatu (mm)";
       if (dimW) dimW?.classList.remove("hidden");
       if (dimH) dimH?.classList.add("hidden");
+      if (dimD) dimD?.classList.add("hidden");
     } else if (item.type === "led") {
       if (title2) title2.innerText = "2. Konfiguracja profilu oświetleniowego LED";
       if (lblW) lblW.innerText = "Długość odcinka LED (mm)";
       if (dimW) dimW?.classList.remove("hidden");
       if (dimH) dimH?.classList.add("hidden");
+      if (dimD) dimD?.classList.add("hidden");
     } else if (item.type === "corner") {
       if (title2) title2.innerText = "2. Gabaryty szafki narożnej";
       if (lblW) lblW.innerText = "Szerokość narożnej (mm)";
       if (lblH) lblH.innerText = "Wysokość szafki";
       if (dimW) dimW?.classList.remove("hidden");
       if (dimH) dimH?.classList.remove("hidden");
+      if (dimD) dimD?.classList.add("hidden");
       // Interior selector only for diagonal corner
       if (this.wizard.state.currentStep === 3) {
         if (interiorSel) interiorSel.classList.toggle("hidden", item.cornerType !== "diagonal");
@@ -326,6 +331,7 @@ export class WizardUI {
       if (lblH) lblH.innerText = "Wysokość szafki";
       if (dimW) dimW?.classList.remove("hidden");
       if (dimH) dimH?.classList.remove("hidden");
+      if (dimD) dimD?.classList.remove("hidden");
       if (this.wizard.state.currentStep === 3) {
         if (interiorSel) interiorSel.classList.remove("hidden");
         if (ctrlShelves) ctrlShelves.classList.toggle("hidden", item.interiorType !== "shelves");

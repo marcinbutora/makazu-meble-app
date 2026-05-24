@@ -107,7 +107,7 @@ export class BOMService {
         { name: "Bok lewy", w: H, h: D, qty: 1, mat: body, edge: "2 × wys." },
         { name: "Bok prawy", w: H, h: D, qty: 1, mat: body, edge: "2 × wys." },
         { name: "Trawers górny", w: innerW, h: 100, qty: 2, mat: body, edge: "1 × szer." },
-        { name: "Płyta HDF (plecy)", w: W - 2, h: H - 2, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
+        { name: "Płyta HDF (plecy)", w: H - 4, h: W - 4, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
         { name: "Nóżka regulowana", w: "—", h: "—", qty: 4, mat: "Komponent / akcesoria", edge: "—" },
       );
     } else if (item.type === "top") {
@@ -116,7 +116,7 @@ export class BOMService {
         { name: "Bok prawy", w: H, h: D, qty: 1, mat: body, edge: "2 × wys." },
         { name: "Wieniec dolny", w: innerW, h: D, qty: 1, mat: body, edge: "1 × szer." },
         { name: "Wieniec górny", w: innerW, h: D, qty: 1, mat: body, edge: "1 × szer." },
-        { name: "Płyta HDF (plecy)", w: W - 2, h: H - 2, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
+        { name: "Płyta HDF (plecy)", w: H - 4, h: W - 4, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
       );
     }
 
@@ -139,7 +139,7 @@ export class BOMService {
         { name: "Bok prawy", w: H, h: dR, qty: 1, mat: body, edge: "2 × wys." },
         { name: "Wieniec dolny", w: innerW, h: Math.min(dL, dR), qty: 1, mat: body, edge: "1 × szer." },
         { name: "Trawers górny", w: innerW, h: 100, qty: 2, mat: body, edge: "1 × szer." },
-        { name: "Płyta HDF (plecy)", w: W - 2, h: H - 2, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
+        { name: "Płyta HDF (plecy)", w: H - 4, h: W - 4, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
         { name: "Nóżka regulowana", w: "—", h: "—", qty: 4, mat: "Komponent / akcesoria", edge: "—" },
       );
 
@@ -176,8 +176,8 @@ export class BOMService {
         { name: "Bok prawy", w: H, h: dR, qty: 1, mat: body, edge: "2 × wys." },
         { name: "Wieniec dolny", w: innerW, h: Math.min(dL, dR), qty: 1, mat: body, edge: "1 × szer." },
         { name: "Trawers górny", w: innerW, h: 100, qty: 2, mat: body, edge: "1 × szer." },
-        { name: "Płyta HDF (plecy lewa)", w: dL - 2, h: H - 2, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
-        { name: "Płyta HDF (plecy prawa)", w: dR - 2, h: H - 2, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
+        { name: "Płyta HDF (plecy lewa)", w: H - 4, h: dL - 4, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
+        { name: "Płyta HDF (plecy prawa)", w: H - 4, h: dR - 4, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
         { name: "Nóżka regulowana", w: "—", h: "—", qty: 4, mat: "Komponent / akcesoria", edge: "—" },
       );
 
@@ -207,8 +207,8 @@ export class BOMService {
         { name: "Bok prawy", w: H, h: dR, qty: 1, mat: body, edge: "2 × wys." },
         { name: "Wieniec dolny", w: innerW, h: Math.min(dL, dR), qty: 1, mat: body, edge: "1 × szer." },
         { name: "Trawers górny", w: innerW, h: 100, qty: 2, mat: body, edge: "1 × szer." },
-        { name: "Płyta HDF (plecy lewa)", w: dL - 2, h: H - 2, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
-        { name: "Płyta HDF (plecy prawa)", w: dR - 2, h: H - 2, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
+        { name: "Płyta HDF (plecy lewa)", w: H - 4, h: dL - 4, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
+        { name: "Płyta HDF (plecy prawa)", w: H - 4, h: dR - 4, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
         { name: "Nóżka regulowana", w: "—", h: "—", qty: 4, mat: "Komponent / akcesoria", edge: "—" },
       );
 

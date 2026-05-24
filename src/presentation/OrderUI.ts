@@ -77,7 +77,7 @@ export class OrderUI {
 
       box.innerHTML = `
         <div class="flex justify-between items-center bg-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-100">
-          <span>POZYCJA #${idx + 1}: ${typeLabel} (${item.dimensions.width} x ${item.dimensions.height} x ${item.dimensions.depth}mm)</span>
+          <span>POZYCJA #${idx + 1}: ${typeLabel} (Szerokość: ${item.dimensions.width} mm, Wysokość: ${item.dimensions.height} mm, Głębokość: ${item.dimensions.depth} mm)</span>
           <span class="text-blue-400">${interiorLabel}</span>
         </div>
         <div class="overflow-x-auto">
@@ -85,7 +85,7 @@ export class OrderUI {
             <thead>
               <tr class="border-b border-slate-700 font-semibold text-slate-500 uppercase tracking-wider">
                 <th class="p-2">Element składowy</th>
-                <th class="p-2 text-right">Długość (mm)</th>
+                <th class="p-2 text-right">Wysokość (mm)</th>
                 <th class="p-2 text-right">Szerokość (mm)</th>
                 <th class="p-2 text-center">Sztuki</th>
                 <th class="p-2">Materiał / Kolor</th>
