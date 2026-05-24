@@ -1,5 +1,6 @@
 import { WizardService } from "../application/WizardService.js";
 import { OrderService } from "../application/OrderService.js";
+import { ToggleService } from "../application/ToggleService.js";
 import { OrderItem, CabinetType, InteriorType } from "../domain/entities/OrderItem.js";
 import { Renderer } from "./Renderer.js";
 
@@ -11,6 +12,7 @@ export class WizardUI {
     private wizard: WizardService,
     private orderService: OrderService,
     private renderer: Renderer,
+    private toggleService: ToggleService,
     onSave?: () => void,
   ) {
     this.onSave = onSave ?? null;
@@ -270,6 +272,19 @@ export class WizardUI {
     this.renderer.setText("wizard-hint-text", this.wizard.hint);
     this.updateInteriorUI();
     this.updateTypeCards();
+    this.filterTypeCards();
+  }
+
+  private filterTypeCards(): void {
+    const config = this.toggleService.getConfig();
+    document.querySelectorAll(".type-card").forEach(card => {
+      const type = card.getAttribute("data-type");
+      if (type && config[type as keyof typeof config] === false) {
+        card.classList.add("hidden");
+      } else {
+        card.classList.remove("hidden");
+      }
+    });
   }
 
   private renderStep2Labels(): void {

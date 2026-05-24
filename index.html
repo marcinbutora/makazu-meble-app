@@ -17,362 +17,11 @@
     <!-- Tailwind CSS v4 CDN -->
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
 
-    <style>
-        /* ==================== SYSTEM ANIMACJI ==================== */
-        .animate-modal-enter {
-            animation: modalEnter 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-
-        .animate-modal-leave {
-            animation: modalLeave 0.2s ease-in forwards;
-        }
-
-        .animate-tile-add {
-            animation: tileAdd 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes modalEnter {
-            from {
-                opacity: 0;
-                transform: scale(0.95) translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-
-        @keyframes modalLeave {
-            from {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-
-            to {
-                opacity: 0;
-                transform: scale(0.95) translateY(20px);
-            }
-        }
-
-        .animate-step-enter {
-            animation: stepEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes stepEnter {
-            from {
-                opacity: 0;
-                transform: translateX(24px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes tileAdd {
-            from {
-                opacity: 0;
-                transform: translateX(30px) scale(0.9);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0) scale(1);
-            }
-        }
-
-        /* Karuzele podglądu zlecenia – wysokość naturalna, przewijanie pionowe w #order-visual-wall */
-        .order-visual-section {
-            flex-shrink: 0;
-        }
-
-        .order-carousel-frame {
-            position: relative;
-            flex-shrink: 0;
-        }
-
-        .order-carousel-track {
-            display: flex;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-            align-items: stretch;
-            gap: 0.5rem;
-            padding-left: 0;
-            padding-right: 0;
-            scrollbar-width: none;
-        }
-
-        .order-carousel-track::-webkit-scrollbar {
-            display: none;
-        }
-
-        .order-carousel-item {
-            flex: 0 0 auto;
-            scroll-snap-align: center;
-            min-width: 0;
-            box-sizing: border-box;
-            opacity: 0.42;
-            filter: grayscale(0.35) brightness(0.85);
-            transform: scale(0.94);
-            transition: opacity 0.25s, filter 0.25s, transform 0.25s, border-color 0.25s;
-        }
-
-        .order-carousel-item--active {
-            opacity: 1;
-            filter: none;
-            transform: scale(1);
-            border-color: rgb(59, 130, 246);
-            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.15);
-        }
-
-        .order-tile-preview-host {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4px 8px 8px;
-        }
-
-        .order-carousel-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 20;
-            width: 2rem;
-            height: 2rem;
-            border-radius: 9999px;
-            background: rgba(15, 23, 42, 0.92);
-            border: 1px solid rgb(71, 85, 105);
-            color: white;
-            font-size: 1.25rem;
-            line-height: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: opacity 0.15s, background 0.15s;
-        }
-
-        .order-carousel-btn:hover:not(:disabled) {
-            background: rgb(37, 99, 235);
-            border-color: rgb(59, 130, 246);
-        }
-
-        .order-carousel-btn:disabled {
-            opacity: 0.25;
-            cursor: not-allowed;
-        }
-
-        .order-carousel-btn--prev {
-            left: 0.25rem;
-        }
-
-        .order-carousel-btn--next {
-            right: 0.25rem;
-        }
-
-        #hero-section.hero-compact {
-            margin-top: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        #hero-section.hero-compact h2,
-        #hero-section.hero-compact p {
-            display: none;
-        }
-
-        .led-temp-card {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.35rem;
-            padding: 0.65rem 0.5rem;
-            border-radius: 0.75rem;
-            border: 2px solid rgb(51, 65, 85);
-            background: rgb(15, 23, 42);
-            cursor: pointer;
-            transition: border-color 0.15s, background 0.15s, transform 0.15s;
-        }
-
-        .led-temp-card:hover {
-            border-color: rgb(100, 116, 139);
-        }
-
-        .led-temp-card--active {
-            border-color: rgb(59, 130, 246);
-            background: rgba(30, 58, 138, 0.35);
-            transform: translateY(-1px);
-        }
-
-        .type-card {
-            transition: border-color 0.15s, background-color 0.15s, transform 0.15s;
-        }
-        .type-card:hover {
-            border-color: rgb(100, 116, 139);
-            background-color: rgb(30, 41, 59);
-        }
-        .theme-light .type-card:hover {
-            border-color: #94a3b8;
-            background-color: #f1f5f9;
-        }
-
-        .led-temp-swatch {
-            width: 2.75rem;
-            height: 1.25rem;
-            border-radius: 9999px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .led-temp-swatch--warm {
-            background: linear-gradient(90deg, #f59e0b, #fde68a);
-            box-shadow: 0 0 14px rgba(245, 158, 11, 0.75);
-        }
-
-        .led-temp-swatch--neutral {
-            background: linear-gradient(90deg, #fef3c7, #fffbeb);
-            box-shadow: 0 0 14px rgba(253, 224, 71, 0.55);
-        }
-
-        .led-temp-swatch--cool {
-            background: linear-gradient(90deg, #38bdf8, #e0f2fe);
-            box-shadow: 0 0 14px rgba(56, 189, 248, 0.75);
-        }
-
-        .order-tab-btn {
-            padding: 0.5rem 1rem;
-            border-radius: 0.75rem;
-            font-size: 0.75rem;
-            font-weight: 700;
-            border: 1px solid rgb(51, 65, 85);
-            background: rgb(30, 41, 59);
-            color: rgb(148, 163, 184);
-            cursor: pointer;
-            transition: background 0.15s, border-color 0.15s, color 0.15s;
-        }
-
-        .order-tab-btn:hover {
-            border-color: rgb(100, 116, 139);
-            color: rgb(226, 232, 240);
-        }
-
-        .order-tab-btn--active {
-            border-color: rgb(59, 130, 246);
-            background: rgba(30, 58, 138, 0.45);
-            color: rgb(147, 197, 253);
-        }
-
-        @media print {
-            body {
-                background: white !important;
-                color: black !important;
-            }
-
-            header,
-            #hero-section,
-            .no-print,
-            footer,
-            button {
-                display: none !important;
-            }
-
-            #main-order-layout {
-                display: block !important;
-            }
-
-            #order-panel-cabinets {
-                display: none !important;
-            }
-
-            #order-panel-table {
-                display: flex !important;
-                width: 100% !important;
-            }
-
-            .order-tab-btn {
-                display: none !important;
-            }
-        }
-
-        /* ==================== SYSTEM MOTYWÓW ==================== */
-        .theme-light {
-            --tw-bg-opacity: 1;
-            --tw-text-opacity: 1;
-        }
-        .theme-light,
-        .theme-light body {
-            background-color: #f1f5f9 !important;
-            color: #0f172a !important;
-        }
-        .theme-light .bg-slate-900 { background-color: #f1f5f9 !important; }
-        .theme-light .bg-slate-800 { background-color: #ffffff !important; }
-        .theme-light .bg-slate-700 { background-color: #f1f5f9 !important; }
-        .theme-light .bg-slate-950 { background-color: #f8fafc !important; }
-        .theme-light .bg-black\/30,
-        .theme-light .bg-black\/40 { background-color: #e2e8f0 !important; }
-        .theme-light .bg-black\/75 { background-color: rgba(255,255,255,0.85) !important; }
-        .theme-light .bg-slate-900\/40,
-        .theme-light .bg-slate-900\/50,
-        .theme-light .bg-slate-900\/60,
-        .theme-light .bg-slate-900\/80,
-        .theme-light .bg-slate-900\/90 { background-color: #f8fafc !important; }
-        .theme-light .bg-slate-800\/50 { background-color: #f8fafc !important; }
-        .theme-light .bg-blue-950\/40 { background-color: #eff6ff !important; }
-        .theme-light .bg-red-950\/30,
-        .theme-light .bg-red-950\/50,
-        .theme-light .bg-red-950\/60 { background-color: #fef2f2 !important; }
-        .theme-light .bg-amber-950\/10,
-        .theme-light .bg-amber-950\/30,
-        .theme-light .bg-amber-950\/50 { background-color: #fffbeb !important; }
-        .theme-light .bg-green-950\/30 { background-color: #f0fdf4 !important; }
-        .theme-light .text-white { color: #0f172a !important; }
-        .theme-light .text-slate-100 { color: #0f172a !important; }
-        .theme-light .text-slate-200 { color: #1e293b !important; }
-        .theme-light .text-slate-300 { color: #334155 !important; }
-        .theme-light .text-slate-400 { color: #475569 !important; }
-        .theme-light .text-slate-500 { color: #64748b !important; }
-        .theme-light .border-slate-700 { border-color: #e2e8f0 !important; }
-        .theme-light .border-slate-600 { border-color: #cbd5e1 !important; }
-        .theme-light .border-slate-800 { border-color: #e2e8f0 !important; }
-        .theme-light .border-blue-700\/40 { border-color: #93c5fd !important; }
-        .theme-light .border-amber-900\/30 { border-color: #fde68a !important; }
-        .theme-light input,
-        .theme-light select {
-            background-color: #ffffff !important;
-            color: #0f172a !important;
-            border-color: #cbd5e1 !important;
-        }
-        .theme-light input:disabled,
-        .theme-light select:disabled {
-            opacity: 0.6;
-        }
-        .theme-light .bg-blue-600.text-white,
-        .theme-light .bg-blue-700.text-white {
-            color: #ffffff !important;
-        }
-        .theme-light #nav-contractor-name {
-            color: #0f172a !important;
-        }
-        .theme-light .order-carousel-item--active {
-            border-color: rgb(59, 130, 246);
-        }
-        .theme-light .order-carousel-btn {
-            background: rgba(255, 255, 255, 0.92);
-            border-color: #cbd5e1;
-            color: #0f172a;
-        }
-        .theme-light .led-temp-card {
-            background: #ffffff;
-            border-color: #cbd5e1;
-        }
-        .theme-light .led-temp-card--active {
-            border-color: rgb(59, 130, 246);
-            background: #eff6ff;
-        }
-    </style>
+    <link rel="stylesheet" href="src/styles/animations.css">
+    <link rel="stylesheet" href="src/styles/carousel.css">
+    <link rel="stylesheet" href="src/styles/components.css">
+    <link rel="stylesheet" href="src/styles/theme.css">
+    <link rel="stylesheet" href="src/styles/print.css">
 </head>
 
 <body class="bg-slate-900 text-slate-100 h-screen overflow-hidden flex flex-col">
@@ -539,6 +188,37 @@
                         <input type="tel" id="input-cfg-phone"
                             class="w-full p-2.5 border border-slate-600 rounded-lg bg-transparent text-white">
                     </div>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-700 pt-4">
+                <label class="block text-xs font-bold uppercase text-slate-500 mb-3">Dostępne kategorie w konfiguratorze</label>
+                <div class="space-y-2.5">
+                    <label class="flex items-center justify-between cursor-pointer group">
+                        <span class="text-sm text-slate-300 group-hover:text-white transition-colors">📥 Szafki dolne</span>
+                        <input type="checkbox" id="toggle-bottom" class="sr-only" checked>
+                        <span class="checkbox-visual"></span>
+                    </label>
+                    <label class="flex items-center justify-between cursor-pointer group">
+                        <span class="text-sm text-slate-300 group-hover:text-white transition-colors">📭 Szafki górne</span>
+                        <input type="checkbox" id="toggle-top" class="sr-only" checked>
+                        <span class="checkbox-visual"></span>
+                    </label>
+                    <label class="flex items-center justify-between cursor-pointer group">
+                        <span class="text-sm text-slate-300 group-hover:text-white transition-colors">📐 Szafki narożne</span>
+                        <input type="checkbox" id="toggle-corner" class="sr-only" checked>
+                        <span class="checkbox-visual"></span>
+                    </label>
+                    <label class="flex items-center justify-between cursor-pointer group">
+                        <span class="text-sm text-slate-300 group-hover:text-white transition-colors">🪵 Blaty</span>
+                        <input type="checkbox" id="toggle-countertop" class="sr-only" checked>
+                        <span class="checkbox-visual"></span>
+                    </label>
+                    <label class="flex items-center justify-between cursor-pointer group">
+                        <span class="text-sm text-slate-300 group-hover:text-white transition-colors">💡 Profile LED</span>
+                        <input type="checkbox" id="toggle-led" class="sr-only" checked>
+                        <span class="checkbox-visual"></span>
+                    </label>
                 </div>
             </div>
             <div class="flex justify-end gap-3 pt-2">

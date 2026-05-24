@@ -1,0 +1,32 @@
+/* ==================== DRUKOWANIE ==================== */
+@media print {
+    body {
+        background: white !important;
+        color: black !important;
+    }
+
+    header,
+    #hero-section,
+    .no-print,
+    footer,
+    button {
+        display: none !important;
+    }
+
+    #main-order-layout {
+        display: block !important;
+    }
+
+    #order-panel-cabinets {
+        display: none !important;
+    }
+
+    #order-panel-table {
+        display: flex !important;
+        width: 100% !important;
+    }
+
+    .order-tab-btn {
+        display: none !important;
+    }
+}

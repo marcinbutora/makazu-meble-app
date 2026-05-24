@@ -2,6 +2,7 @@ import { StorageService } from "./infrastructure/StorageService.js";
 import { OrderService } from "./application/OrderService.js";
 import { WizardService } from "./application/WizardService.js";
 import { ThemeService } from "./application/ThemeService.js";
+import { ToggleService } from "./application/ToggleService.js";
 import { Renderer } from "./presentation/Renderer.js";
 import { ThemeUI } from "./presentation/ThemeUI.js";
 import { ContractorUI } from "./presentation/ContractorUI.js";
@@ -14,14 +15,15 @@ function main(): void {
   const orderService = new OrderService(storage);
   const wizardService = new WizardService();
   const themeService = new ThemeService(storage);
+  const toggleService = new ToggleService(storage);
   const renderer = new Renderer();
   const pdfService = new PdfService();
 
-  const wizardUI = new WizardUI(wizardService, orderService, renderer);
+  const wizardUI = new WizardUI(wizardService, orderService, renderer, toggleService);
   const orderUI = new OrderUI(orderService, renderer, (index) => wizardUI.openForEdit(index), pdfService);
   wizardUI.onSave = () => orderUI.refresh();
   new ThemeUI(themeService, renderer);
-  new ContractorUI(orderService, renderer);
+  new ContractorUI(orderService, renderer, toggleService);
 
   // expose for inline onclick handlers
   (window as any).__wiz = wizardUI;

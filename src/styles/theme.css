@@ -1,0 +1,86 @@
+/* ==================== SYSTEM MOTYWÓW ==================== */
+.theme-light {
+    --tw-bg-opacity: 1;
+    --tw-text-opacity: 1;
+}
+.theme-light,
+.theme-light body {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+.theme-light .bg-slate-900 { background-color: #f1f5f9 !important; }
+.theme-light .bg-slate-800 { background-color: #ffffff !important; }
+.theme-light .bg-slate-700 { background-color: #f1f5f9 !important; }
+.theme-light .bg-slate-950 { background-color: #f8fafc !important; }
+.theme-light .bg-black\/30,
+.theme-light .bg-black\/40 { background-color: #e2e8f0 !important; }
+.theme-light .bg-black\/75 { background-color: rgba(255,255,255,0.85) !important; }
+.theme-light .bg-slate-900\/40,
+.theme-light .bg-slate-900\/50,
+.theme-light .bg-slate-900\/60,
+.theme-light .bg-slate-900\/80,
+.theme-light .bg-slate-900\/90 { background-color: #f8fafc !important; }
+.theme-light .bg-slate-800\/50 { background-color: #f8fafc !important; }
+.theme-light .bg-blue-950\/40 { background-color: #eff6ff !important; }
+.theme-light .bg-red-950\/30,
+.theme-light .bg-red-950\/50,
+.theme-light .bg-red-950\/60 { background-color: #fef2f2 !important; }
+.theme-light .bg-amber-950\/10,
+.theme-light .bg-amber-950\/30,
+.theme-light .bg-amber-950\/50 { background-color: #fffbeb !important; }
+.theme-light .bg-green-950\/30 { background-color: #f0fdf4 !important; }
+.theme-light .text-white { color: #0f172a !important; }
+.theme-light .text-slate-100 { color: #0f172a !important; }
+.theme-light .text-slate-200 { color: #1e293b !important; }
+.theme-light .text-slate-300 { color: #334155 !important; }
+.theme-light .text-slate-400 { color: #475569 !important; }
+.theme-light .text-slate-500 { color: #64748b !important; }
+.theme-light .border-slate-700 { border-color: #e2e8f0 !important; }
+.theme-light .border-slate-600 { border-color: #cbd5e1 !important; }
+.theme-light .border-slate-800 { border-color: #e2e8f0 !important; }
+.theme-light .border-blue-700\/40 { border-color: #93c5fd !important; }
+.theme-light .border-amber-900\/30 { border-color: #fde68a !important; }
+.theme-light input,
+.theme-light select {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+}
+.theme-light input:disabled,
+.theme-light select:disabled {
+    opacity: 0.6;
+}
+.theme-light .bg-blue-600.text-white,
+.theme-light .bg-blue-700.text-white {
+    color: #ffffff !important;
+}
+.theme-light #nav-contractor-name {
+    color: #0f172a !important;
+}
+.theme-light .order-carousel-item--active {
+    border-color: rgb(59, 130, 246);
+}
+.theme-light .order-carousel-btn {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+.theme-light .led-temp-card {
+    background: #ffffff;
+    border-color: #cbd5e1;
+}
+.theme-light .led-temp-card--active {
+    border-color: rgb(59, 130, 246);
+    background: #eff6ff;
+}
+.theme-light .type-card:hover {
+    border-color: #94a3b8;
+    background-color: #f1f5f9;
+}
+.theme-light .checkbox-visual {
+    border-color: #94a3b8;
+}
+.theme-light input:checked + .checkbox-visual {
+    background: rgb(37, 99, 235);
+    border-color: rgb(37, 99, 235);
+}
