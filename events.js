@@ -124,7 +124,7 @@ function setupEventListeners() {
   if (nextBtn)
     nextBtn.addEventListener("click", () => {
       const isCabinet =
-        wizardItem.type === "bottom" || wizardItem.type === "top" || wizardItem.type === "column";
+        wizardItem.type === "bottom" || wizardItem.type === "top";
       const maxSteps = isCabinet ? 3 : 2;
 
       if (currentStep < maxSteps) {

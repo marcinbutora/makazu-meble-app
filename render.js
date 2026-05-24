@@ -90,34 +90,7 @@ function generateCabinetFlexTemplate(item) {
     `;
   } else {
     let interiorHtml = "";
-    // Support for 'column' type
-    if (item.type === "column") {
-      const slots = Array.isArray(item.columnSlots) ? item.columnSlots : [];
-      interiorHtml += `<div class="flex flex-col h-full w-full min-h-0 justify-start p-1 bg-slate-900/90 rounded-lg border border-slate-700/80 gap-1.5">`;
-      slots.forEach((sl, i) => {
-        const kind = sl.kind || "shelf";
-        const label =
-          kind === "shelf"
-            ? `PÓŁKA ${i + 1}`
-            : kind === "oven"
-              ? "PIEKARNIK"
-              : "MIKROFALA";
-        const hVal =
-          sl.height ||
-          Math.floor(
-            (item.dimensions.height || 720) / Math.max(1, slots.length),
-          );
-        interiorHtml += `
-          <div class="flex items-center justify-center rounded-lg text-center p-2" style="flex: ${hVal} 1 0%; min-height:36px; border:1px solid rgba(96,165,250,0.08);">
-            <div class="w-full">
-              <div class="text-[9px] font-bold uppercase text-slate-300">${label}</div>
-              <div class="text-xs font-mono font-bold text-blue-400">${hVal} mm</div>
-            </div>
-          </div>
-        `;
-      });
-      interiorHtml += `</div>`;
-    } else if (item.interiorType === "shelves") {
+    if (item.interiorType === "shelves") {
       const count = Number(item.shelvesCount) || 0;
       const sections = count + 1;
       const totalPlatesThickness = 36 + count * 18;
@@ -265,7 +238,7 @@ function updateMainUI() {
     let linearItems = [];
 
     currentOrder.forEach((item, idx) => {
-      if (item.type === "bottom" || item.type === "top" || item.type === "column") {
+      if (item.type === "bottom" || item.type === "top") {
         cabinetItems.push({ item, idx });
       } else {
         linearItems.push({ item, idx });
@@ -279,18 +252,12 @@ function updateMainUI() {
       let typeLabel = "";
       let interiorLabel = "";
       
-      if (item.type === "column") {
-        typeLabel = "SŁUPEK PIONOWY";
-        const slotCount = (item.columnSlots || []).length;
-        interiorLabel = `${slotCount} slot(y)`;
-      } else {
-        typeLabel =
-          item.type === "bottom" ? "SZAFKA DOLNA" : "SZAFKA GÓRNA WISZĄCA";
-        interiorLabel =
-          item.interiorType === "shelves"
-            ? `Półki (${item.shelvesCount} szt.)`
-            : `Szuflady (${item.drawersCount} szt.)`;
-      }
+      typeLabel =
+        item.type === "bottom" ? "SZAFKA DOLNA" : "SZAFKA GÓRNA WISZĄCA";
+      interiorLabel =
+        item.interiorType === "shelves"
+          ? `Półki (${item.shelvesCount} szt.)`
+          : `Szuflady (${item.drawersCount} szt.)`;
 
       cabinetBox.innerHTML = `
         <div class="flex justify-between items-center bg-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-100">

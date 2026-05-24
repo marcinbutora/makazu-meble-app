@@ -130,40 +130,7 @@ function generateCabinetFlexTemplate(item, options = {}) {
   } else {
     // Standardowa szafka (GÓRA / DÓŁ) - identycznie jak w image_bcf4eb.png
     let interiorHtml = "";
-    // DODANE: obsługa typu 'column' (słupek)
-    if (item.type === "column") {
-      const slots = Array.isArray(item.columnSlots) ? item.columnSlots : [];
-      interiorHtml += `<div class="flex flex-col h-full w-full min-h-0 justify-start p-1 bg-slate-900/90 rounded-lg border border-slate-700/80 gap-1.5">`;
-      slots.forEach((sl, i) => {
-        const kind = sl.kind || "shelf";
-        const label =
-          kind === "shelf"
-            ? `PÓŁKA ${i + 1}`
-            : kind === "oven"
-              ? "PIEKARNIK"
-              : "MIKROFALA";
-        const bg =
-          kind === "shelf"
-            ? "bg-slate-800/40 border-blue-500/40"
-            : kind === "oven"
-              ? "bg-red-900/60 border-red-500/60"
-              : "bg-amber-900/50 border-amber-500/50";
-        const hVal =
-          sl.height ||
-          Math.floor(
-            (item.dimensions.height || 720) / Math.max(1, slots.length),
-          );
-        interiorHtml += `
-          <div class="flex items-center justify-center rounded-lg text-center p-2" style="flex: ${hVal} 1 0%; min-height: 36px; border:1px solid rgba(96, 165, 250,0.08);">
-            <div class="w-full">
-              <div class="text-[9px] font-bold uppercase text-slate-300">${label}</div>
-              <div class="text-xs font-mono font-bold text-blue-400">${hVal} mm</div>
-            </div>
-          </div>
-        `;
-      });
-      interiorHtml += `</div>`;
-    } else if (item.interiorType === "shelves") {
+    if (item.interiorType === "shelves") {
       const count = Number(item.shelvesCount) || 0;
       const sections = count + 1;
       const totalPlatesThickness = 36 + count * 18;
@@ -843,23 +810,6 @@ function selectType(type) {
     wizardItem.dimensions.depth = type === "top" ? 320 : 510;
   }
 
-  const ctrlColumn = document.getElementById("ctrl-column");
-  if (ctrlColumn) ctrlColumn.classList.toggle("hidden", type !== "column");
-  if (type === "column") {
-    if (
-      !Array.isArray(wizardItem.columnSlots) ||
-      wizardItem.columnSlots.length === 0
-    ) {
-      wizardItem.columnSlots = [
-        { kind: "shelf", height: 240 },
-        { kind: "shelf", height: 240 },
-        { kind: "shelf", height: 240 },
-      ];
-    }
-    if (typeof recalculateColumnDistribution === "function")
-      recalculateColumnDistribution();
-  }
-
   updateHintText();
   updateInteriorStepUI();
 }
@@ -900,7 +850,7 @@ function renderWizard() {
   const stepEl = document.getElementById(`step-${currentStep}`);
   if (stepEl) stepEl.classList.remove("hidden");
 
-  const isCabinet = wizardItem.type === "bottom" || wizardItem.type === "top" || wizardItem.type === "column";
+  const isCabinet = wizardItem.type === "bottom" || wizardItem.type === "top";
   const totalSteps = isCabinet ? 3 : 2;
 
   const btnBack = document.getElementById("btn-wizard-back");
@@ -925,8 +875,6 @@ function renderWizard() {
   const dimWidthBox = document.getElementById("dim-width-box");
   const dimHeightBox = document.getElementById("dim-height-box");
   const selectorDiv = document.getElementById("interior-type-selector");
-  const ctrlColumn = document.getElementById("ctrl-column");
-
   if (wizardItem.type === "countertop") {
     if (title2) title2.innerText = "2. Parametry i wymiary blatu";
     if (lblWidth) lblWidth.innerText = "Długość całkowita blatu (mm)";
@@ -938,16 +886,6 @@ function renderWizard() {
     if (lblWidth) lblWidth.innerText = "Długość odcinka LED (mm)";
     if (dimWidthBox) dimWidthBox.classList.remove("hidden");
     if (dimHeightBox) dimHeightBox.classList.add("hidden");
-  } else if (wizardItem.type === "column") {
-    if (title2) title2.innerText = "2. Wymiary słupka";
-    if (lblHeight) lblHeight.innerText = "Wysokość całkowita słupka (mm)";
-    if (dimWidthBox) dimWidthBox.classList.add("hidden");
-    if (dimHeightBox) dimHeightBox.classList.remove("hidden");
-    if (currentStep === 3) {
-      if (selectorDiv) selectorDiv.classList.add("hidden");
-      if (ctrlColumn) ctrlColumn.classList.remove("hidden");
-      if (typeof renderColumnSlotsUI === "function") renderColumnSlotsUI();
-    }
   } else {
     if (title2) title2.innerText = "2. Gabaryty zewnętrzne szafki";
     if (lblWidth) lblWidth.innerText = "Szerokość zewnętrzna korpusu (mm)";
@@ -956,12 +894,10 @@ function renderWizard() {
     if (dimHeightBox) dimHeightBox.classList.remove("hidden");
     if (currentStep === 3) {
       if (selectorDiv) selectorDiv.classList.remove("hidden");
-      if (ctrlColumn) ctrlColumn.classList.add("hidden");
       setInterior(wizardItem.interiorType);
     }
   }
   
-  // Dla step-3 poza słupkiem, pokaż selektor
   if (currentStep !== 3 && selectorDiv) {
     selectorDiv.classList.remove("hidden");
   }
@@ -983,14 +919,6 @@ function renderSuggestions() {
       .map(
         (v) =>
           `<button onclick="setDim('width', ${v})" class="text-xs bg-slate-700 px-2 py-1 rounded-md cursor-pointer text-slate-200">${v} mm</button>`,
-      )
-      .join("");
-  } else if (wizardItem.type === "column") {
-    const heights = [1800, 2160, 2400];
-    if (hSugg) hSugg.innerHTML = heights
-      .map(
-        (v) =>
-          `<button onclick="setDim('height', ${v})" class="text-xs bg-slate-700 px-2 py-1 rounded-md cursor-pointer text-slate-200">${v} mm</button>`,
       )
       .join("");
   } else {
