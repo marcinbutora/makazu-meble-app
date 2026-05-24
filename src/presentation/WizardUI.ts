@@ -5,12 +5,15 @@ import { Renderer } from "./Renderer.js";
 
 export class WizardUI {
   private ledPickerBound = false;
+  onSave: (() => void) | null = null;
 
   constructor(
     private wizard: WizardService,
     private orderService: OrderService,
     private renderer: Renderer,
+    onSave?: () => void,
   ) {
+    this.onSave = onSave ?? null;
     this.bindEvents();
     this.setupLedPicker();
     this.setupDynamicListeners();
@@ -19,6 +22,7 @@ export class WizardUI {
   open(): void {
     this.wizard.reset();
     this.syncForm();
+    this.updateTypeCards();
     this.renderer.getEl("wizard-modal")?.classList.remove("hidden");
     const sc = this.renderer.getEl("wizard-steps-container");
     if (sc) sc.className = "lg:col-span-2 flex flex-col justify-center space-y-6 animate-modal-enter";
@@ -30,6 +34,7 @@ export class WizardUI {
     if (!item) return;
     this.wizard.loadForEdit(index, item);
     this.syncForm();
+    this.updateTypeCards();
     this.renderer.getEl("wizard-modal")?.classList.remove("hidden");
     const sc = this.renderer.getEl("wizard-steps-container");
     if (sc) sc.className = "lg:col-span-2 flex flex-col justify-center space-y-6 animate-modal-enter";
@@ -55,52 +60,19 @@ export class WizardUI {
       card.addEventListener("click", () => {
         this.wizard.setType(card.getAttribute("data-type") as CabinetType);
         this.syncForm();
+        this.updateTypeCards();
         this.renderWizard();
       });
     });
+  }
 
-    this.renderer.getEl("btn-opt-shelves")?.addEventListener("click", () => {
-      this.wizard.setInterior("shelves");
-      this.renderWizard();
-    });
-
-    this.renderer.getEl("btn-opt-drawers")?.addEventListener("click", () => {
-      this.wizard.setInterior("drawers");
-      this.renderWizard();
-    });
-
-    this.renderer.getEl("input-shelves-count")?.addEventListener("input", (e) => {
-      const val = Number((e.target as HTMLInputElement).value);
-      this.wizard.state.item.shelvesCount = val;
-      this.renderer.setText("lbl-shelves-count", String(val));
-      this.updateInteriorUI();
-    });
-
-    this.renderer.getEl("btn-drawer-minus")?.addEventListener("click", () => {
-      if (this.wizard.state.item.drawersCount > 1) {
-        this.wizard.state.item.drawersCount--;
-        this.wizard.state.item.drawerHeights.pop();
-        this.wizard.state.item.drawerManualAdjust = false;
-        this.wizard.state.item.normalizeDrawerHeights();
-        this.renderDrawerSliders();
-        this.updateInteriorUI();
-      }
-    });
-
-    this.renderer.getEl("btn-drawer-plus")?.addEventListener("click", () => {
-      if (this.wizard.state.item.drawersCount < 6) {
-        this.wizard.state.item.drawersCount++;
-        this.wizard.state.item.drawerHeights.push(150);
-        this.wizard.state.item.drawerManualAdjust = false;
-        this.wizard.state.item.normalizeDrawerHeights();
-        this.renderDrawerSliders();
-        this.updateInteriorUI();
-      }
-    });
-
-    this.renderer.getEl("input-drawer-own-sides")?.addEventListener("change", (e) => {
-      this.wizard.state.item.drawerOwnSides = (e.target as HTMLInputElement).checked;
-      this.updateInteriorUI();
+  private updateTypeCards(): void {
+    const sel = this.wizard.state.item.type;
+    document.querySelectorAll(".type-card").forEach(card => {
+      const t = card.getAttribute("data-type");
+      card.className = t === sel
+        ? "type-card p-4 border-2 border-blue-600 bg-blue-950/40 text-blue-400 font-bold rounded-xl flex flex-col items-center gap-2 cursor-pointer"
+        : "type-card p-4 border border-slate-700 rounded-xl flex flex-col items-center gap-2 cursor-pointer bg-slate-800 text-white";
     });
   }
 
@@ -123,6 +95,7 @@ export class WizardUI {
     }
 
     this.renderer.getEl("wizard-modal")?.classList.add("hidden");
+    this.onSave?.();
   }
 
   private collectFormValues(): void {
@@ -162,6 +135,49 @@ export class WizardUI {
       };
       el.addEventListener("input", handler);
       el.addEventListener("change", handler);
+    });
+
+    this.renderer.getEl("btn-opt-shelves")?.addEventListener("click", () => {
+      this.wizard.setInterior("shelves");
+      this.updateInteriorUI();
+    });
+
+    this.renderer.getEl("btn-opt-drawers")?.addEventListener("click", () => {
+      this.wizard.setInterior("drawers");
+      this.updateInteriorUI();
+    });
+
+    this.renderer.getEl("input-shelves-count")?.addEventListener("input", (e) => {
+      const val = Number((e.target as HTMLInputElement).value);
+      this.wizard.state.item.shelvesCount = val;
+      this.renderer.setText("lbl-shelves-count", String(val));
+      this.updateInteriorUI();
+    });
+
+    this.renderer.getEl("btn-drawer-minus")?.addEventListener("click", () => {
+      if (this.wizard.state.item.drawersCount > 1) {
+        this.wizard.state.item.drawersCount--;
+        this.wizard.state.item.drawerHeights.pop();
+        this.wizard.state.item.drawerManualAdjust = false;
+        this.renderDrawerSliders();
+        this.updateInteriorUI();
+      }
+    });
+
+    this.renderer.getEl("btn-drawer-plus")?.addEventListener("click", () => {
+      if (this.wizard.state.item.drawersCount < 6) {
+        this.wizard.state.item.drawersCount++;
+        this.wizard.state.item.drawerHeights.push(150);
+        this.wizard.state.item.drawerManualAdjust = false;
+        this.wizard.state.item.normalizeDrawerHeights();
+        this.renderDrawerSliders();
+        this.updateInteriorUI();
+      }
+    });
+
+    this.renderer.getEl("input-drawer-own-sides")?.addEventListener("change", (e) => {
+      this.wizard.state.item.drawerOwnSides = (e.target as HTMLInputElement).checked;
+      this.updateInteriorUI();
     });
   }
 
@@ -219,9 +235,15 @@ export class WizardUI {
   // ── render wizard step ───────────────────────────────
 
   renderWizard(): void {
-    document.querySelectorAll(".wizard-step").forEach(s => s.classList.add("hidden"));
+    document.querySelectorAll(".wizard-step").forEach(s => {
+      s.classList.add("hidden");
+      s.classList.remove("animate-step-enter");
+    });
     const stepEl = this.renderer.getEl(`step-${this.wizard.state.currentStep}`);
-    if (stepEl) stepEl.classList.remove("hidden");
+    if (stepEl) {
+      stepEl.classList.remove("hidden");
+      requestAnimationFrame(() => stepEl.classList.add("animate-step-enter"));
+    }
 
     const btnBack = this.renderer.getEl<HTMLButtonElement>("btn-wizard-back");
     if (btnBack) btnBack.disabled = this.wizard.isFirstStep;
@@ -233,6 +255,7 @@ export class WizardUI {
     this.renderSuggestions();
     this.renderer.setText("wizard-hint-text", this.wizard.hint);
     this.updateInteriorUI();
+    this.updateTypeCards();
   }
 
   private renderStep2Labels(): void {
@@ -298,6 +321,22 @@ export class WizardUI {
     }
   }
 
+  private updateInteriorButtons(): void {
+    const type = this.wizard.state.item.interiorType;
+    const activeCls = "flex-1 py-2 px-4 border border-blue-600 bg-blue-900/20 text-blue-400 font-bold rounded-xl flex items-center justify-center gap-1 cursor-pointer";
+    const normalCls = "flex-1 py-2 px-4 border border-slate-700 text-slate-400 rounded-xl flex items-center justify-center gap-1 bg-slate-800 cursor-pointer";
+
+    const btnShelves = this.renderer.getEl("btn-opt-shelves");
+    const btnDrawers = this.renderer.getEl("btn-opt-drawers");
+    if (btnShelves) btnShelves.className = type === "shelves" ? activeCls : normalCls;
+    if (btnDrawers) btnDrawers.className = type === "drawers" ? activeCls : normalCls;
+
+    const ctrlShelves = this.renderer.getEl("ctrl-shelves");
+    const ctrlDrawers = this.renderer.getEl("ctrl-drawers");
+    if (ctrlShelves) ctrlShelves.classList.toggle("hidden", type !== "shelves");
+    if (ctrlDrawers) ctrlDrawers.classList.toggle("hidden", type !== "drawers");
+  }
+
   // ── interior / preview ───────────────────────────────
 
   private updateInteriorUI(): void {
@@ -306,6 +345,8 @@ export class WizardUI {
     const btnNext = this.renderer.getEl<HTMLButtonElement>("btn-wizard-next");
     const item = this.wizard.state.item;
     if (!pBox) return;
+
+    this.updateInteriorButtons();
 
     if (!item.isLinear && item.interiorType === "drawers") {
       const used = item.totalDrawerHeight;

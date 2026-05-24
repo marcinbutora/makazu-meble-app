@@ -17,6 +17,7 @@ function main(): void {
 
   const wizardUI = new WizardUI(wizardService, orderService, renderer);
   const orderUI = new OrderUI(orderService, renderer, (index) => wizardUI.openForEdit(index));
+  wizardUI.onSave = () => orderUI.refresh();
   new ThemeUI(themeService, renderer);
   new ContractorUI(orderService, renderer);
 

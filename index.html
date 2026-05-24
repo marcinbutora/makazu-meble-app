@@ -55,6 +55,21 @@
             }
         }
 
+        .animate-step-enter {
+            animation: stepEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes stepEnter {
+            from {
+                opacity: 0;
+                transform: translateX(24px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
         @keyframes tileAdd {
             from {
                 opacity: 0;

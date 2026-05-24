@@ -189,18 +189,34 @@ export class OrderUI {
 
     this.bindCarousel("order-visual-top", "carousel-top-prev", "carousel-top-next");
     this.bindCarousel("order-visual-bottom", "carousel-bottom-prev", "carousel-bottom-next");
+
+    this.refreshCarousel("order-visual-top", "carousel-top-prev", "carousel-top-next");
+    this.refreshCarousel("order-visual-bottom", "carousel-bottom-prev", "carousel-bottom-next");
   }
 
   private renderTiles(track: HTMLElement, allItems: any[], type: string, emptyEl: HTMLElement | null): void {
     track.innerHTML = "";
     let count = 0;
 
-    allItems.forEach((item, idx) => {
-      if (item.type !== type) return;
+    const filtered = allItems.filter(item => item.type === type);
+    const c = filtered.length;
+    const itemPercent = c > 0 ? Math.max(100 / c, 100 / 3) : 33.333;
+    const isMobile = window.innerWidth <= 768;
+    const sidePadding = isMobile ? 0 : (100 - itemPercent) / 2;
+
+    filtered.forEach((item, _i) => {
+      const globalIdx = allItems.indexOf(item);
       count++;
       const tile = document.createElement("div");
       tile.className = "order-carousel-item bg-slate-800 border border-slate-700 rounded-2xl p-3 flex flex-col text-white shadow-lg cursor-pointer group";
       tile.setAttribute("data-carousel-item", "");
+
+      if (isMobile) {
+        tile.style.flex = _i === 0 ? "0 0 100%" : "0 0 80%";
+      } else {
+        tile.style.flex = `0 0 ${itemPercent}%`;
+      }
+      tile.style.minWidth = "0";
 
       tile.addEventListener("click", (e) => {
         if ((e.target as HTMLElement).closest("[data-order-delete]")) return;
@@ -209,12 +225,12 @@ export class OrderUI {
           setTimeout(() => this.updateActiveSlide(track), 220);
           return;
         }
-        this.onEditItem(idx);
+        this.onEditItem(globalIdx);
       });
 
       tile.innerHTML = `
         <div class="w-full flex justify-between items-center gap-2 text-[10px] text-slate-400 font-bold mb-2 border-b border-slate-700/50 pb-2">
-          <span class="group-hover:text-blue-400 transition-colors truncate">#${idx + 1} Modyfikuj pozycję 📝</span>
+          <span class="group-hover:text-blue-400 transition-colors truncate">#${globalIdx + 1} Modyfikuj pozycję 📝</span>
           <div class="flex items-center gap-1.5 shrink-0">
             <span class="px-1.5 py-0.5 border border-slate-600 bg-slate-900 rounded text-[9px] font-mono text-slate-300">${item.typeBadge}</span>
             <button type="button" data-order-delete class="no-print w-7 h-7 flex items-center justify-center rounded-lg border border-red-900/60 bg-red-950/50 text-red-400 hover:bg-red-900/60 hover:text-red-300 hover:border-red-500 cursor-pointer transition-colors" title="Usuń z zamówienia">🗑</button>
@@ -225,8 +241,8 @@ export class OrderUI {
 
       tile.querySelector("[data-order-delete]")?.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (confirm(`Czy na pewno usunąć pozycję #${idx + 1}?`)) {
-          this.orderService.removeItem(idx);
+        if (confirm(`Czy na pewno usunąć pozycję #${globalIdx + 1}?`)) {
+          this.orderService.removeItem(globalIdx);
           this.refresh();
         }
       });
@@ -234,12 +250,16 @@ export class OrderUI {
       track.appendChild(tile);
     });
 
+    track.style.paddingLeft = `${sidePadding}%`;
+    track.style.paddingRight = `${sidePadding}%`;
+
     if (emptyEl) emptyEl.classList.toggle("hidden", count > 0);
   }
 
   private bindCarousel(trackId: string, prevId: string, nextId: string): void {
     const track = this.renderer.getEl(trackId);
-    if (!track) return;
+    if (!track || track.dataset.carouselBound) return;
+    track.dataset.carouselBound = "1";
 
     const refresh = () => {
       this.updateActiveSlide(track);
@@ -257,6 +277,13 @@ export class OrderUI {
       const step = this.getScrollStep(track);
       track.scrollBy({ left: step, behavior: "smooth" });
     });
+  }
+
+  private refreshCarousel(trackId: string, prevId: string, nextId: string): void {
+    const track = this.renderer.getEl(trackId);
+    if (!track) return;
+    this.updateActiveSlide(track);
+    this.updateCarouselButtons(track, prevId, nextId);
   }
 
   private getScrollStep(track: HTMLElement): number {
