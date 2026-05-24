@@ -1,5 +1,6 @@
 import { OrderService } from "../application/OrderService.js";
 import { Renderer } from "./Renderer.js";
+import { PdfService } from "../domain/services/PdfService.js";
 
 export class OrderUI {
   private currentTab: "table" | "cabinets" = "table";
@@ -8,6 +9,7 @@ export class OrderUI {
     private orderService: OrderService,
     private renderer: Renderer,
     private onEditItem: (index: number) => void,
+    private pdfService: PdfService,
   ) {
     this.bindEvents();
   }
@@ -323,7 +325,12 @@ export class OrderUI {
   // ── event binding ────────────────────────────────────
 
   private bindEvents(): void {
-    this.renderer.getEl("btn-print-pdf")?.addEventListener("click", () => window.print());
+    this.renderer.getEl("btn-print-pdf")?.addEventListener("click", async () => {
+      const items = this.orderService.getItems();
+      if (items.length === 0) { alert("Brak pozycji w zamowieniu."); return; }
+      const doc = await this.pdfService.generate(items, this.orderService.getContractor());
+      this.pdfService.save(doc);
+    });
 
     this.renderer.getEl("btn-clear-order")?.addEventListener("click", () => {
       if (confirm("Czy na pewno chcesz wyczyścić całe obecne zamówienie?")) {

@@ -7,6 +7,7 @@ import { ThemeUI } from "./presentation/ThemeUI.js";
 import { ContractorUI } from "./presentation/ContractorUI.js";
 import { WizardUI } from "./presentation/WizardUI.js";
 import { OrderUI } from "./presentation/OrderUI.js";
+import { PdfService } from "./domain/services/PdfService.js";
 
 function main(): void {
   const storage = new StorageService();
@@ -14,9 +15,10 @@ function main(): void {
   const wizardService = new WizardService();
   const themeService = new ThemeService(storage);
   const renderer = new Renderer();
+  const pdfService = new PdfService();
 
   const wizardUI = new WizardUI(wizardService, orderService, renderer);
-  const orderUI = new OrderUI(orderService, renderer, (index) => wizardUI.openForEdit(index));
+  const orderUI = new OrderUI(orderService, renderer, (index) => wizardUI.openForEdit(index), pdfService);
   wizardUI.onSave = () => orderUI.refresh();
   new ThemeUI(themeService, renderer);
   new ContractorUI(orderService, renderer);
