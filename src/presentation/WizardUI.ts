@@ -20,6 +20,8 @@ export class WizardUI {
     this.wizard.reset();
     this.syncForm();
     this.renderer.getEl("wizard-modal")?.classList.remove("hidden");
+    const sc = this.renderer.getEl("wizard-steps-container");
+    if (sc) sc.className = "lg:col-span-2 flex flex-col justify-center space-y-6 animate-modal-enter";
     this.renderWizard();
   }
 
@@ -29,6 +31,8 @@ export class WizardUI {
     this.wizard.loadForEdit(index, item);
     this.syncForm();
     this.renderer.getEl("wizard-modal")?.classList.remove("hidden");
+    const sc = this.renderer.getEl("wizard-steps-container");
+    if (sc) sc.className = "lg:col-span-2 flex flex-col justify-center space-y-6 animate-modal-enter";
     this.renderWizard();
   }
 

@@ -193,6 +193,18 @@
             transform: translateY(-1px);
         }
 
+        .type-card {
+            transition: border-color 0.15s, background-color 0.15s, transform 0.15s;
+        }
+        .type-card:hover {
+            border-color: rgb(100, 116, 139);
+            background-color: rgb(30, 41, 59);
+        }
+        .theme-light .type-card:hover {
+            border-color: #94a3b8;
+            background-color: #f1f5f9;
+        }
+
         .led-temp-swatch {
             width: 2.75rem;
             height: 1.25rem;
