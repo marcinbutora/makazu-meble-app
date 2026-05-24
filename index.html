@@ -470,6 +470,21 @@
                         </div>
                     </section>
 
+                    <section class="order-visual-section">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Szafki narożne</h4>
+                        <div class="order-carousel-frame min-h-[4rem]">
+                            <button type="button" id="carousel-corner-prev"
+                                class="order-carousel-btn order-carousel-btn--prev hidden no-print"
+                                aria-label="Poprzednia szafka narożna">‹</button>
+                            <div id="order-visual-corner" class="order-carousel-track"></div>
+                            <button type="button" id="carousel-corner-next"
+                                class="order-carousel-btn order-carousel-btn--next hidden no-print"
+                                aria-label="Następna szafka narożna">›</button>
+                            <p id="order-visual-corner-empty" class="py-6 text-center text-xs text-slate-500 italic">
+                                Brak szafek narożnych</p>
+                        </div>
+                    </section>
+
                     <section id="order-visual-accessories" class="order-visual-section hidden">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Blat i oświetlenie
                         </h4>
@@ -562,6 +577,10 @@
                         <button data-type="top"
                             class="type-card p-4 border border-slate-700 rounded-xl flex flex-col items-center gap-2 cursor-pointer bg-slate-800 text-white">
                             <span class="text-2xl">📭</span><span class="font-semibold text-xs">Szafka górna</span>
+                        </button>
+                        <button data-type="corner"
+                            class="type-card p-4 border border-slate-700 rounded-xl flex flex-col items-center gap-2 cursor-pointer bg-slate-800 text-white">
+                            <span class="text-2xl">📐</span><span class="font-semibold text-xs">Szafka narożna</span>
                         </button>
                         <button data-type="countertop"
                             class="type-card p-4 border border-slate-700 rounded-xl flex flex-col items-center gap-2 cursor-pointer bg-slate-800 text-white">
@@ -682,6 +701,55 @@
                                 LED</label>
                             <input type="text" id="input-led-profile-color" value="Anodowane Srebrne"
                                 class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white">
+                        </div>
+                    </div>
+
+                    <div id="corner-options-block" class="hidden space-y-4 pt-4 border-t border-slate-800 max-w-lg">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Typ narożnej</label>
+                            <select id="input-corner-type"
+                                class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white cursor-pointer">
+                                <option value="blind">Ślepa z nerką</option>
+                                <option value="diagonal">Rogowa z frontem 45°</option>
+                                <option value="open">Otwarta (L-kształtna)</option>
+                            </select>
+                        </div>
+
+                        <div id="corner-kidney-block" class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Typ nerki</label>
+                                <select id="input-kidney-type"
+                                    class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white cursor-pointer">
+                                    <option value="pull-out">Wysuwana</option>
+                                    <option value="rotating">Obrotowa (karuzela)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Ilość półek w nerce</label>
+                                <input type="number" id="input-kidney-shelves" min="1" max="5" value="3"
+                                    class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white">
+                            </div>
+                        </div>
+
+                        <div id="corner-diagonal-block" class="hidden space-y-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Szerokość frontu pod kątem (mm)</label>
+                                <input type="number" id="input-corner-front-width" min="300" max="500" value="400"
+                                    class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Głębokość bok lewy (mm)</label>
+                                <input type="number" id="input-corner-depth-left" min="300" max="600" value="510"
+                                    class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Głębokość bok prawy (mm)</label>
+                                <input type="number" id="input-corner-depth-right" min="300" max="600" value="510"
+                                    class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white">
+                            </div>
                         </div>
                     </div>
                 </div>

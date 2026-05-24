@@ -8,6 +8,7 @@ export class Dimensions {
   static defaultFor(type: string): Dimensions {
     switch (type) {
       case "top": return new Dimensions(600, 720, 320);
+      case "corner": return new Dimensions(900, 720, 510);
       case "countertop": return new Dimensions(600, 600, 38);
       case "led": return new Dimensions(600, 0, 0);
       default: return new Dimensions(600, 720, 510);

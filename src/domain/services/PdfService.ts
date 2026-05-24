@@ -165,7 +165,7 @@ export class PdfService {
     const h = item.dimensions.height;
     const d = item.dimensions.depth;
 
-    this.drawHeader(doc, `SZAFKA ${item.typeBadge}  #${num}       ${w} x ${h} x ${d} mm`);
+    this.drawHeader(doc, `SZAFKA ${item.type === "corner" ? "NAROŻNA" : item.typeBadge}  #${num}       ${w} x ${h} x ${d} mm`);
 
     // top row: drawing left + specs right
     const rowTop = 23;

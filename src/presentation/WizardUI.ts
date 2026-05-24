@@ -123,6 +123,8 @@ export class WizardUI {
       "input-color-body", "input-color-front", "input-handle-type",
       "input-countertop-color", "input-countertop-thickness",
       "input-led-type", "input-led-temp", "input-led-profile-color",
+      "input-corner-type", "input-kidney-type", "input-kidney-shelves",
+      "input-corner-front-width", "input-corner-depth-left", "input-corner-depth-right",
     ];
     ids.forEach(id => {
       const el = this.renderer.getEl<HTMLInputElement>(id);
@@ -177,6 +179,17 @@ export class WizardUI {
 
     this.renderer.getEl("input-drawer-own-sides")?.addEventListener("change", (e) => {
       this.wizard.state.item.drawerOwnSides = (e.target as HTMLInputElement).checked;
+      this.updateInteriorUI();
+    });
+
+    this.renderer.getEl("input-corner-type")?.addEventListener("change", (e) => {
+      this.wizard.setCornerType((e.target as HTMLSelectElement).value as any);
+      this.renderTypeBlocks();
+      this.updateInteriorUI();
+    });
+
+    this.renderer.getEl("input-kidney-type")?.addEventListener("change", (e) => {
+      this.wizard.setKidneyType((e.target as HTMLSelectElement).value as any);
       this.updateInteriorUI();
     });
   }
@@ -252,6 +265,7 @@ export class WizardUI {
     this.renderer.setText("btn-wizard-next", this.wizard.nextButtonLabel);
 
     this.renderStep2Labels();
+    this.renderTypeBlocks();
     this.renderSuggestions();
     this.renderer.setText("wizard-hint-text", this.wizard.hint);
     this.updateInteriorUI();
@@ -279,6 +293,18 @@ export class WizardUI {
       if (lblW) lblW.innerText = "Długość odcinka LED (mm)";
       if (dimW) dimW?.classList.remove("hidden");
       if (dimH) dimH?.classList.add("hidden");
+    } else if (item.type === "corner") {
+      if (title2) title2.innerText = "2. Gabaryty szafki narożnej";
+      if (lblW) lblW.innerText = "Szerokość narożnej (mm)";
+      if (lblH) lblH.innerText = "Wysokość szafki";
+      if (dimW) dimW?.classList.remove("hidden");
+      if (dimH) dimH?.classList.remove("hidden");
+      // Interior selector only for diagonal corner
+      if (this.wizard.state.currentStep === 3) {
+        if (interiorSel) interiorSel.classList.toggle("hidden", item.cornerType !== "diagonal");
+        if (ctrlShelves) ctrlShelves.classList.toggle("hidden", item.interiorType !== "shelves" || item.cornerType !== "diagonal");
+        if (ctrlDrawers) ctrlDrawers.classList.toggle("hidden", item.interiorType !== "drawers" || item.cornerType !== "diagonal");
+      }
     } else {
       if (title2) title2.innerText = "2. Gabaryty zewnętrzne szafki";
       if (lblW) lblW.innerText = "Szerokość zewnętrzna korpusu (mm)";
@@ -293,7 +319,32 @@ export class WizardUI {
     }
 
     if (this.wizard.state.currentStep !== 3 && interiorSel) {
-      interiorSel.classList.remove("hidden");
+      interiorSel.classList.toggle("hidden", item.type === "corner" && item.cornerType !== "diagonal");
+    }
+  }
+
+  private renderTypeBlocks(): void {
+    const item = this.wizard.state.item;
+    const ctBlock = this.renderer.getEl("countertop-options-block");
+    const ledBlock = this.renderer.getEl("led-options-block");
+    const cornerBlock = this.renderer.getEl("corner-options-block");
+
+    if (ctBlock) ctBlock.classList.toggle("hidden", item.type !== "countertop");
+    if (ledBlock) ledBlock.classList.toggle("hidden", item.type !== "led");
+    if (cornerBlock) cornerBlock.classList.toggle("hidden", item.type !== "corner");
+
+    if (item.type === "corner") {
+      const kidneyBlock = this.renderer.getEl("corner-kidney-block");
+      const diagBlock = this.renderer.getEl("corner-diagonal-block");
+      if (kidneyBlock) kidneyBlock.classList.toggle("hidden", item.cornerType !== "blind");
+      if (diagBlock) diagBlock.classList.toggle("hidden", item.cornerType !== "diagonal");
+
+      this.renderer.setVal("input-corner-type", item.cornerType);
+      this.renderer.setVal("input-kidney-type", item.kidneyType);
+      this.renderer.setVal("input-kidney-shelves", item.kidneyShelvesCount);
+      this.renderer.setVal("input-corner-front-width", item.cornerFrontWidth);
+      this.renderer.setVal("input-corner-depth-left", item.cornerDepthLeft);
+      this.renderer.setVal("input-corner-depth-right", item.cornerDepthRight);
     }
   }
 

@@ -1,4 +1,4 @@
-import { OrderItem, CabinetType, InteriorType } from "../domain/entities/OrderItem.js";
+import { OrderItem, CabinetType, InteriorType, CornerType, KidneyType } from "../domain/entities/OrderItem.js";
 import { Dimensions } from "../domain/value-objects/Dimensions.js";
 import { PreviewService } from "../domain/services/PreviewService.js";
 
@@ -16,6 +16,7 @@ export const ADVISOR_HINTS: {
   step1: {
     bottom: "Szafka dolna standardowa. Głębokość korpusu wynosi 510mm.",
     top: "Szafka wisząca/górna. Maksymalna zalecana głębokość to 320mm.",
+    corner: "Szafka narożna. Wybierz typ: ślepa z nerką, rogowa z frontem pod kątem, lub otwarta L-kształtna.",
     countertop: "Blat kuchenny. Możesz zdefiniować długość, głębokość, grubość oraz dekor.",
     led: "Profil oświetleniowy LED. Wybierz typ profilu, barwę światła oraz długość odcinka.",
   },
@@ -99,6 +100,11 @@ export class WizardService {
     });
     if (type === "countertop") {
       newItem.dimensions = new Dimensions(newItem.dimensions.width, newItem.dimensions.height, 600);
+    } else if (type === "corner") {
+      newItem.dimensions = new Dimensions(900, 720, 510);
+      newItem.cornerType = "blind";
+      newItem.kidneyType = "pull-out";
+      newItem.kidneyShelvesCount = 3;
     } else if (!newItem.isLinear) {
       newItem.dimensions = new Dimensions(
         newItem.dimensions.width,
@@ -157,7 +163,21 @@ export class WizardService {
       case "input-led-type": item.ledType = value as any; break;
       case "input-led-temp": item.ledColorTemperature = value; break;
       case "input-led-profile-color": item.ledProfileColor = value; break;
+      case "input-corner-type": item.cornerType = value as CornerType; break;
+      case "input-kidney-type": item.kidneyType = value as KidneyType; break;
+      case "input-kidney-shelves": item.kidneyShelvesCount = Number(value); break;
+      case "input-corner-front-width": item.cornerFrontWidth = Number(value); break;
+      case "input-corner-depth-left": item.cornerDepthLeft = Number(value); break;
+      case "input-corner-depth-right": item.cornerDepthRight = Number(value); break;
     }
     item.normalizeDrawerHeights();
+  }
+
+  setCornerType(type: CornerType): void {
+    this.state.item.cornerType = type;
+  }
+
+  setKidneyType(type: KidneyType): void {
+    this.state.item.kidneyType = type;
   }
 }

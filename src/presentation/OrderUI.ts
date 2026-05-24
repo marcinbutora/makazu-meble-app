@@ -68,7 +68,9 @@ export class OrderUI {
     cabinetItems.forEach(({ item, idx }) => {
       const box = document.createElement("div");
       box.className = "bg-slate-900/40 p-4 rounded-xl border border-slate-700 space-y-2";
-      const typeLabel = item.type === "bottom" ? "SZAFKA DOLNA" : "SZAFKA GÓRNA WISZĄCA";
+      const typeLabel = item.type === "bottom" ? "SZAFKA DOLNA"
+        : item.type === "corner" ? "SZAFKA NAROŻNA"
+        : "SZAFKA GÓRNA WISZĄCA";
       const interiorLabel = item.interiorType === "shelves"
         ? `Półki (${item.shelvesCount} szt.)`
         : `Szuflady (${item.drawersCount} szt.)`;
@@ -158,21 +160,23 @@ export class OrderUI {
   private renderVisualWall(): void {
     const topTrack = this.renderer.getEl("order-visual-top");
     const bottomTrack = this.renderer.getEl("order-visual-bottom");
+    const cornerTrack = this.renderer.getEl("order-visual-corner");
     const accessoriesSection = this.renderer.getEl("order-visual-accessories");
     const accessoriesInner = this.renderer.getEl("order-visual-accessories-inner");
     const topEmpty = this.renderer.getEl("order-visual-top-empty");
     const bottomEmpty = this.renderer.getEl("order-visual-bottom-empty");
+    const cornerEmpty = this.renderer.getEl("order-visual-corner-empty");
 
-    if (!topTrack || !bottomTrack) return;
+    if (!topTrack || !bottomTrack || !cornerTrack) return;
 
     const items = this.orderService.getItems();
-    const topItems = items.filter((_, i) => items[i].type === "top");
-    const bottomItems = items.filter((_, i) => items[i].type === "bottom");
-    const accItems = items.filter((_, i) => items[i].isLinear);
-    const hasAcc = accItems.length > 0;
 
     this.renderTiles(topTrack, items, "top", topEmpty);
     this.renderTiles(bottomTrack, items, "bottom", bottomEmpty);
+    this.renderTiles(cornerTrack, items, "corner", cornerEmpty);
+
+    const accItems = items.filter((_, i) => items[i].isLinear);
+    const hasAcc = accItems.length > 0;
 
     if (accessoriesSection) accessoriesSection.classList.toggle("hidden", !hasAcc);
     if (accessoriesInner && hasAcc) {
@@ -191,9 +195,11 @@ export class OrderUI {
 
     this.bindCarousel("order-visual-top", "carousel-top-prev", "carousel-top-next");
     this.bindCarousel("order-visual-bottom", "carousel-bottom-prev", "carousel-bottom-next");
+    this.bindCarousel("order-visual-corner", "carousel-corner-prev", "carousel-corner-next");
 
     this.refreshCarousel("order-visual-top", "carousel-top-prev", "carousel-top-next");
     this.refreshCarousel("order-visual-bottom", "carousel-bottom-prev", "carousel-bottom-next");
+    this.refreshCarousel("order-visual-corner", "carousel-corner-prev", "carousel-corner-next");
   }
 
   private renderTiles(track: HTMLElement, allItems: any[], type: string, emptyEl: HTMLElement | null): void {

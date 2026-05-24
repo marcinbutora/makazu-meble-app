@@ -1,8 +1,10 @@
 import { Dimensions } from "../value-objects/Dimensions.js";
 
-export type CabinetType = "bottom" | "top" | "countertop" | "led";
+export type CabinetType = "bottom" | "top" | "corner" | "countertop" | "led";
 export type InteriorType = "shelves" | "drawers";
 export type LedMountType = "recessed" | "surface";
+export type CornerType = "blind" | "diagonal" | "open";
+export type KidneyType = "pull-out" | "rotating";
 
 export interface OrderItemParams {
   type?: CabinetType;
@@ -21,6 +23,12 @@ export interface OrderItemParams {
   ledType?: LedMountType;
   ledColorTemperature?: string;
   ledProfileColor?: string;
+  cornerType?: CornerType;
+  kidneyType?: KidneyType;
+  kidneyShelvesCount?: number;
+  cornerFrontWidth?: number;
+  cornerDepthLeft?: number;
+  cornerDepthRight?: number;
 }
 
 export class OrderItem {
@@ -40,6 +48,12 @@ export class OrderItem {
   ledType: LedMountType;
   ledColorTemperature: string;
   ledProfileColor: string;
+  cornerType: CornerType;
+  kidneyType: KidneyType;
+  kidneyShelvesCount: number;
+  cornerFrontWidth: number;
+  cornerDepthLeft: number;
+  cornerDepthRight: number;
 
   constructor(params: OrderItemParams = {}) {
     const type = params.type ?? "bottom";
@@ -59,16 +73,23 @@ export class OrderItem {
     this.ledType = params.ledType ?? "recessed";
     this.ledColorTemperature = params.ledColorTemperature ?? "4000K";
     this.ledProfileColor = params.ledProfileColor ?? "Anodowane Srebrne";
+    this.cornerType = params.cornerType ?? "blind";
+    this.kidneyType = params.kidneyType ?? "pull-out";
+    this.kidneyShelvesCount = params.kidneyShelvesCount ?? 3;
+    this.cornerFrontWidth = params.cornerFrontWidth ?? 400;
+    this.cornerDepthLeft = params.cornerDepthLeft ?? 510;
+    this.cornerDepthRight = params.cornerDepthRight ?? 510;
   }
 
   get isCabinet(): boolean {
-    return this.type === "bottom" || this.type === "top";
+    return this.type === "bottom" || this.type === "top" || this.type === "corner";
   }
 
   get typeLabel(): string {
     const labels: Record<CabinetType, string> = {
       bottom: "szafka dolna",
       top: "szafka górna",
+      corner: "szafka narożna",
       countertop: "blat",
       led: "profil LED",
     };
@@ -79,6 +100,7 @@ export class OrderItem {
     const badges: Record<CabinetType, string> = {
       bottom: "DÓŁ",
       top: "GÓRA",
+      corner: "NAROŻ",
       countertop: "BLAT",
       led: "LED",
     };
@@ -115,6 +137,12 @@ export class OrderItem {
       ledType: this.ledType,
       ledColorTemperature: this.ledColorTemperature,
       ledProfileColor: this.ledProfileColor,
+      cornerType: this.cornerType,
+      kidneyType: this.kidneyType,
+      kidneyShelvesCount: this.kidneyShelvesCount,
+      cornerFrontWidth: this.cornerFrontWidth,
+      cornerDepthLeft: this.cornerDepthLeft,
+      cornerDepthRight: this.cornerDepthRight,
     });
   }
 
