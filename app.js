@@ -255,7 +255,20 @@ document.addEventListener("DOMContentLoaded", () => {
     setupDynamicFormListeners();
   setupLedTemperaturePicker();
   if (typeof updateMainUI === "function") updateMainUI();
+  initTheme();
 });
+
+function initTheme() {
+  const btn = document.getElementById("btn-toggle-theme");
+  if (!btn) return;
+  const isLight = document.documentElement.classList.contains("theme-light");
+  btn.textContent = isLight ? "🌙" : "☀️";
+  btn.addEventListener("click", () => {
+    const nowLight = document.documentElement.classList.toggle("theme-light");
+    btn.textContent = nowLight ? "🌙" : "☀️";
+    localStorage.setItem("makazu_theme", nowLight ? "light" : "dark");
+  });
+}
 
 function loadContractor() {
   const saved = localStorage.getItem("makazu_contractor");
