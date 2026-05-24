@@ -89,7 +89,8 @@ export class OrderUI {
                 <th class="p-2 text-right">Szerokość (mm)</th>
                 <th class="p-2 text-center">Sztuki</th>
                 <th class="p-2">Materiał / Kolor</th>
-                <th class="p-2 text-center">Oklejanie</th>
+                <th class="p-2 text-center">Oklej dł.</th>
+                <th class="p-2 text-center">Oklej krót.</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800 text-slate-300">

@@ -132,7 +132,8 @@ export class PdfService {
       this.t(doc, String(p.h), cols[2].x, cy + rowH * 0.7, { align: "right" });
       this.t(doc, `${p.qty} szt.`, cols[3].x, cy + rowH * 0.7, { align: "center" });
       this.t(doc, p.mat, cols[4].x, cy + rowH * 0.7);
-      this.t(doc, p.edge, cols[5].x, cy + rowH * 0.7, { align: "center" });
+      this.t(doc, String(p.edgeLong ?? 0), cols[5].x, cy + rowH * 0.7, { align: "center" });
+      this.t(doc, String(p.edgeShort ?? 0), cols[6].x, cy + rowH * 0.7, { align: "center" });
       cy += rowH;
     });
     return cy;
@@ -147,7 +148,8 @@ export class PdfService {
       { label: "Wys. mm", frac: 0.12, align: "right" },
       { label: "Ilosc", frac: 0.10, align: "center" },
       { label: "Material", frac: 0.22, align: "left" },
-      { label: "Obrzeze", frac: 0.16, align: "center" },
+      { label: "Dl.", frac: 0.08, align: "center" },
+      { label: "Krot.", frac: 0.08, align: "center" },
     ];
     let x = left;
     return specs.map(c => {
@@ -343,7 +345,8 @@ export class PdfService {
       this.t(doc, String(p.h), cols[2].x, y + rowH * 0.7, { align: "right" });
       this.t(doc, `${p.qty} szt.`, cols[3].x, y + rowH * 0.7, { align: "center" });
       this.t(doc, p.mat, cols[4].x, y + rowH * 0.7);
-      this.t(doc, p.edge, cols[5].x, y + rowH * 0.7, { align: "center" });
+      this.t(doc, String(p.edgeLong ?? 0), cols[5].x, y + rowH * 0.7, { align: "center" });
+      this.t(doc, String(p.edgeShort ?? 0), cols[6].x, y + rowH * 0.7, { align: "center" });
       y += rowH;
     });
   }

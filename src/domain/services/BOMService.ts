@@ -7,9 +7,32 @@ export interface BOMPart {
   qty: number;
   mat: string;
   edge: string;
+  edgeLong?: number | string;
+  edgeShort?: number | string;
 }
 
 const THICKNESS = 18;
+
+function edgeLongShort(edge: string, w: number | string, h: number | string, name?: string): { edgeLong: number | string; edgeShort: number | string } {
+  if (edge === "—") return { edgeLong: "—", edgeShort: "—" };
+  if (edge === "brak") return { edgeLong: 0, edgeShort: 0 };
+  if (edge === "wokół ABS") return { edgeLong: 2, edgeShort: 2 };
+  const n = parseInt(edge, 10);
+  if (isNaN(n)) return { edgeLong: edge, edgeShort: edge };
+  const onW = edge.includes("szer.") || (edge.includes("wys.") && name?.includes("Bok"));
+  const numW = typeof w === "number" ? w : 0;
+  const numH = typeof h === "number" ? h : 0;
+  const wIsLong = numW >= numH;
+  if (onW) {
+    return wIsLong
+      ? { edgeLong: n, edgeShort: 0 }
+      : { edgeLong: 0, edgeShort: n };
+  } else {
+    return wIsLong
+      ? { edgeLong: 0, edgeShort: n }
+      : { edgeLong: n, edgeShort: 0 };
+  }
+}
 
 export class BOMService {
   calculate(item: OrderItem, index: number): BOMPart[] {
@@ -69,7 +92,7 @@ export class BOMService {
       });
     }
 
-    return parts.map(p => ({ ...p }));
+    return parts.map(p => ({ ...p, ...edgeLongShort(p.edge, p.w, p.h, p.name) }));
   }
 
   private cabinetShell(item: OrderItem): BOMPart[] {
@@ -84,7 +107,7 @@ export class BOMService {
         { name: "Bok lewy", w: H, h: D, qty: 1, mat: body, edge: "2 × wys." },
         { name: "Bok prawy", w: H, h: D, qty: 1, mat: body, edge: "2 × wys." },
         { name: "Trawers górny", w: innerW, h: 100, qty: 2, mat: body, edge: "1 × szer." },
-        { name: "Płyta HDF (plecy)", w: innerW, h: H - THICKNESS, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
+        { name: "Płyta HDF (plecy)", w: W - 2, h: H - 2, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
         { name: "Nóżka regulowana", w: "—", h: "—", qty: 4, mat: "Komponent / akcesoria", edge: "—" },
       );
     } else if (item.type === "top") {
@@ -93,7 +116,7 @@ export class BOMService {
         { name: "Bok prawy", w: H, h: D, qty: 1, mat: body, edge: "2 × wys." },
         { name: "Wieniec dolny", w: innerW, h: D, qty: 1, mat: body, edge: "1 × szer." },
         { name: "Wieniec górny", w: innerW, h: D, qty: 1, mat: body, edge: "1 × szer." },
-        { name: "Płyta HDF (plecy)", w: innerW, h: H - 2 * THICKNESS, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
+        { name: "Płyta HDF (plecy)", w: W - 2, h: H - 2, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
       );
     }
 
@@ -116,7 +139,7 @@ export class BOMService {
         { name: "Bok prawy", w: H, h: dR, qty: 1, mat: body, edge: "2 × wys." },
         { name: "Wieniec dolny", w: innerW, h: Math.min(dL, dR), qty: 1, mat: body, edge: "1 × szer." },
         { name: "Trawers górny", w: innerW, h: 100, qty: 2, mat: body, edge: "1 × szer." },
-        { name: "Płyta HDF (plecy)", w: innerW, h: H - THICKNESS, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
+        { name: "Płyta HDF (plecy)", w: W - 2, h: H - 2, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
         { name: "Nóżka regulowana", w: "—", h: "—", qty: 4, mat: "Komponent / akcesoria", edge: "—" },
       );
 
@@ -153,8 +176,8 @@ export class BOMService {
         { name: "Bok prawy", w: H, h: dR, qty: 1, mat: body, edge: "2 × wys." },
         { name: "Wieniec dolny", w: innerW, h: Math.min(dL, dR), qty: 1, mat: body, edge: "1 × szer." },
         { name: "Trawers górny", w: innerW, h: 100, qty: 2, mat: body, edge: "1 × szer." },
-        { name: "Płyta HDF (plecy lewa)", w: dL - THICKNESS, h: H - THICKNESS, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
-        { name: "Płyta HDF (plecy prawa)", w: dR - THICKNESS, h: H - THICKNESS, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
+        { name: "Płyta HDF (plecy lewa)", w: dL - 2, h: H - 2, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
+        { name: "Płyta HDF (plecy prawa)", w: dR - 2, h: H - 2, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
         { name: "Nóżka regulowana", w: "—", h: "—", qty: 4, mat: "Komponent / akcesoria", edge: "—" },
       );
 
@@ -184,8 +207,8 @@ export class BOMService {
         { name: "Bok prawy", w: H, h: dR, qty: 1, mat: body, edge: "2 × wys." },
         { name: "Wieniec dolny", w: innerW, h: Math.min(dL, dR), qty: 1, mat: body, edge: "1 × szer." },
         { name: "Trawers górny", w: innerW, h: 100, qty: 2, mat: body, edge: "1 × szer." },
-        { name: "Płyta HDF (plecy lewa)", w: dL - THICKNESS, h: H - THICKNESS, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
-        { name: "Płyta HDF (plecy prawa)", w: dR - THICKNESS, h: H - THICKNESS, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
+        { name: "Płyta HDF (plecy lewa)", w: dL - 2, h: H - 2, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
+        { name: "Płyta HDF (plecy prawa)", w: dR - 2, h: H - 2, qty: 1, mat: "Płyta HDF 3 mm", edge: "brak" },
         { name: "Nóżka regulowana", w: "—", h: "—", qty: 4, mat: "Komponent / akcesoria", edge: "—" },
       );
 
@@ -199,7 +222,7 @@ export class BOMService {
       }
     }
 
-    return parts.map(p => ({ ...p }));
+    return parts.map(p => ({ ...p, ...edgeLongShort(p.edge, p.w, p.h, p.name) }));
   }
 
   private cornerDrawerBox(item: OrderItem, drawerIndex: number, drawerHeight: number, frontWidth: number): BOMPart[] {
@@ -270,7 +293,8 @@ export class BOMService {
         <td class="p-2 text-right font-mono text-slate-500">${p.h}</td>
         <td class="p-2 text-center">${p.qty} szt.</td>
         <td class="p-2 text-slate-400 max-w-[200px] truncate" title="${p.mat}">${p.mat}</td>
-        <td class="p-2 text-center"><span class="bg-slate-800 px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-500">${p.edge}</span></td>
+        <td class="p-2 text-center font-mono text-[10px]">${p.edgeLong ?? 0}</td>
+        <td class="p-2 text-center font-mono text-[10px]">${p.edgeShort ?? 0}</td>
       </tr>
     `).join("");
   }
