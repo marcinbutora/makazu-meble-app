@@ -1,0 +1,374 @@
+import { WizardService } from "../application/WizardService.js";
+import { OrderService } from "../application/OrderService.js";
+import { OrderItem, CabinetType, InteriorType } from "../domain/entities/OrderItem.js";
+import { Renderer } from "./Renderer.js";
+
+export class WizardUI {
+  private ledPickerBound = false;
+
+  constructor(
+    private wizard: WizardService,
+    private orderService: OrderService,
+    private renderer: Renderer,
+  ) {
+    this.bindEvents();
+    this.setupLedPicker();
+    this.setupDynamicListeners();
+  }
+
+  open(): void {
+    this.wizard.reset();
+    this.syncForm();
+    this.renderer.getEl("wizard-modal")?.classList.remove("hidden");
+    this.renderWizard();
+  }
+
+  openForEdit(index: number): void {
+    const item = this.orderService.getItems()[index];
+    if (!item) return;
+    this.wizard.loadForEdit(index, item);
+    this.syncForm();
+    this.renderer.getEl("wizard-modal")?.classList.remove("hidden");
+    this.renderWizard();
+  }
+
+  // ── event binding ──────────────────────────────────────
+
+  private bindEvents(): void {
+    this.renderer.getEl("btn-start-wizard")?.addEventListener("click", () => this.open());
+    this.renderer.getEl("btn-add-order-item")?.addEventListener("click", () => this.open());
+    this.renderer.getEl("btn-close-wizard")?.addEventListener("click", () => {
+      this.renderer.getEl("wizard-modal")?.classList.add("hidden");
+    });
+
+    this.renderer.getEl("btn-wizard-back")?.addEventListener("click", () => {
+      if (this.wizard.goBack()) this.renderWizard();
+    });
+
+    this.renderer.getEl("btn-wizard-next")?.addEventListener("click", () => this.handleNext());
+
+    document.querySelectorAll(".type-card").forEach(card => {
+      card.addEventListener("click", () => {
+        this.wizard.setType(card.getAttribute("data-type") as CabinetType);
+        this.syncForm();
+        this.renderWizard();
+      });
+    });
+
+    this.renderer.getEl("btn-opt-shelves")?.addEventListener("click", () => {
+      this.wizard.setInterior("shelves");
+      this.renderWizard();
+    });
+
+    this.renderer.getEl("btn-opt-drawers")?.addEventListener("click", () => {
+      this.wizard.setInterior("drawers");
+      this.renderWizard();
+    });
+
+    this.renderer.getEl("input-shelves-count")?.addEventListener("input", (e) => {
+      const val = Number((e.target as HTMLInputElement).value);
+      this.wizard.state.item.shelvesCount = val;
+      this.renderer.setText("lbl-shelves-count", String(val));
+      this.updateInteriorUI();
+    });
+
+    this.renderer.getEl("btn-drawer-minus")?.addEventListener("click", () => {
+      if (this.wizard.state.item.drawersCount > 1) {
+        this.wizard.state.item.drawersCount--;
+        this.wizard.state.item.drawerHeights.pop();
+        this.wizard.state.item.drawerManualAdjust = false;
+        this.wizard.state.item.normalizeDrawerHeights();
+        this.renderDrawerSliders();
+        this.updateInteriorUI();
+      }
+    });
+
+    this.renderer.getEl("btn-drawer-plus")?.addEventListener("click", () => {
+      if (this.wizard.state.item.drawersCount < 6) {
+        this.wizard.state.item.drawersCount++;
+        this.wizard.state.item.drawerHeights.push(150);
+        this.wizard.state.item.drawerManualAdjust = false;
+        this.wizard.state.item.normalizeDrawerHeights();
+        this.renderDrawerSliders();
+        this.updateInteriorUI();
+      }
+    });
+
+    this.renderer.getEl("input-drawer-own-sides")?.addEventListener("change", (e) => {
+      this.wizard.state.item.drawerOwnSides = (e.target as HTMLInputElement).checked;
+      this.updateInteriorUI();
+    });
+  }
+
+  private handleNext(): void {
+    if (!this.wizard.isLastStep) {
+      this.wizard.goNext();
+      this.renderWizard();
+      return;
+    }
+
+    this.collectFormValues();
+
+    const item = this.wizard.state.item.clone();
+    const editIdx = this.wizard.state.editIndex;
+
+    if (editIdx !== null) {
+      this.orderService.updateItem(editIdx, item);
+    } else {
+      this.orderService.addItem(item);
+    }
+
+    this.renderer.getEl("wizard-modal")?.classList.add("hidden");
+  }
+
+  private collectFormValues(): void {
+    const getVal = (id: string, fallback: string | number = "") => {
+      const el = this.renderer.getEl<HTMLInputElement | HTMLSelectElement>(id);
+      return el ? el.value : fallback;
+    };
+
+    const item = this.wizard.state.item;
+    item.colorBody = String(getVal("input-color-body", item.colorBody));
+    item.colorFront = String(getVal("input-color-front", item.colorFront));
+    item.handleType = String(getVal("input-handle-type", item.handleType));
+    item.countertopColor = String(getVal("input-countertop-color", item.countertopColor));
+    item.countertopThickness = Number(getVal("input-countertop-thickness", item.countertopThickness));
+    item.ledType = String(getVal("input-led-type", item.ledType)) as any;
+    item.ledColorTemperature = String(getVal("input-led-temp", item.ledColorTemperature));
+    item.ledProfileColor = String(getVal("input-led-profile-color", item.ledProfileColor));
+  }
+
+  // ── live preview ─────────────────────────────────────
+
+  private setupDynamicListeners(): void {
+    const ids = [
+      "input-width", "input-height", "input-depth",
+      "input-color-body", "input-color-front", "input-handle-type",
+      "input-countertop-color", "input-countertop-thickness",
+      "input-led-type", "input-led-temp", "input-led-profile-color",
+    ];
+    ids.forEach(id => {
+      const el = this.renderer.getEl<HTMLInputElement>(id);
+      if (!el) return;
+      const handler = () => {
+        this.wizard.setValFromForm(el.id, el.value);
+        this.syncLedPicker();
+        this.renderDrawerSliders();
+        this.updateInteriorUI();
+      };
+      el.addEventListener("input", handler);
+      el.addEventListener("change", handler);
+    });
+  }
+
+  // ── LED picker ───────────────────────────────────────
+
+  private setupLedPicker(): void {
+    const picker = this.renderer.getEl("led-temp-picker");
+    if (!picker || this.ledPickerBound) return;
+    this.ledPickerBound = true;
+    picker.querySelectorAll(".led-temp-card").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const temp = (btn as HTMLElement).dataset.temp ?? "4000K";
+        this.wizard.state.item.ledColorTemperature = temp;
+        this.syncLedPicker();
+        this.updateInteriorUI();
+      });
+    });
+  }
+
+  private syncLedPicker(): void {
+    const temp = this.wizard.state.item.ledColorTemperature || "4000K";
+    const hidden = this.renderer.getEl<HTMLInputElement>("input-led-temp");
+    if (hidden) hidden.value = temp;
+    document.querySelectorAll("#led-temp-picker .led-temp-card").forEach(btn => {
+      btn.classList.toggle("led-temp-card--active", (btn as HTMLElement).dataset.temp === temp);
+    });
+  }
+
+  // ── form sync ────────────────────────────────────────
+
+  private syncForm(): void {
+    const item = this.wizard.state.item;
+    this.renderer.setVal("input-color-body", item.colorBody);
+    this.renderer.setVal("input-color-front", item.colorFront);
+    this.renderer.setVal("input-handle-type", item.handleType);
+    this.renderer.setVal("input-width", item.dimensions.width);
+    this.renderer.setVal("input-height", item.dimensions.height);
+    this.renderer.setVal("input-depth", item.dimensions.depth);
+    this.renderer.setVal("input-countertop-color", item.countertopColor);
+    this.renderer.setVal("input-countertop-thickness", item.countertopThickness);
+    this.renderer.setVal("input-led-type", item.ledType);
+    this.renderer.setVal("input-led-temp", item.ledColorTemperature);
+    this.renderer.setVal("input-led-profile-color", item.ledProfileColor);
+    this.syncLedPicker();
+
+    const el = this.renderer.getEl<HTMLInputElement>("input-drawer-own-sides");
+    if (el) el.checked = item.drawerOwnSides !== false;
+
+    if (item.interiorType === "shelves") {
+      this.renderer.setVal("input-shelves-count", item.shelvesCount);
+      this.renderer.setText("lbl-shelves-count", String(item.shelvesCount));
+    }
+  }
+
+  // ── render wizard step ───────────────────────────────
+
+  renderWizard(): void {
+    document.querySelectorAll(".wizard-step").forEach(s => s.classList.add("hidden"));
+    const stepEl = this.renderer.getEl(`step-${this.wizard.state.currentStep}`);
+    if (stepEl) stepEl.classList.remove("hidden");
+
+    const btnBack = this.renderer.getEl<HTMLButtonElement>("btn-wizard-back");
+    if (btnBack) btnBack.disabled = this.wizard.isFirstStep;
+
+    this.renderer.setText("wizard-progress-lbl", this.wizard.progressLabel);
+    this.renderer.setText("btn-wizard-next", this.wizard.nextButtonLabel);
+
+    this.renderStep2Labels();
+    this.renderSuggestions();
+    this.renderer.setText("wizard-hint-text", this.wizard.hint);
+    this.updateInteriorUI();
+  }
+
+  private renderStep2Labels(): void {
+    const item = this.wizard.state.item;
+    const title2 = this.renderer.getEl("step-2-title");
+    const lblW = this.renderer.getEl("lbl-dim-width");
+    const lblH = this.renderer.getEl("lbl-dim-height");
+    const dimW = this.renderer.getEl("dim-width-box");
+    const dimH = this.renderer.getEl("dim-height-box");
+    const interiorSel = this.renderer.getEl("interior-type-selector");
+    const ctrlShelves = this.renderer.getEl("ctrl-shelves");
+    const ctrlDrawers = this.renderer.getEl("ctrl-drawers");
+
+    if (item.type === "countertop") {
+      if (title2) title2.innerText = "2. Parametry i wymiary blatu";
+      if (lblW) lblW.innerText = "Długość całkowita blatu (mm)";
+      if (dimW) dimW?.classList.remove("hidden");
+      if (dimH) dimH?.classList.add("hidden");
+    } else if (item.type === "led") {
+      if (title2) title2.innerText = "2. Konfiguracja profilu oświetleniowego LED";
+      if (lblW) lblW.innerText = "Długość odcinka LED (mm)";
+      if (dimW) dimW?.classList.remove("hidden");
+      if (dimH) dimH?.classList.add("hidden");
+    } else {
+      if (title2) title2.innerText = "2. Gabaryty zewnętrzne szafki";
+      if (lblW) lblW.innerText = "Szerokość zewnętrzna korpusu (mm)";
+      if (lblH) lblH.innerText = "Wysokość szafki";
+      if (dimW) dimW?.classList.remove("hidden");
+      if (dimH) dimH?.classList.remove("hidden");
+      if (this.wizard.state.currentStep === 3) {
+        if (interiorSel) interiorSel.classList.remove("hidden");
+        if (ctrlShelves) ctrlShelves.classList.toggle("hidden", item.interiorType !== "shelves");
+        if (ctrlDrawers) ctrlDrawers.classList.toggle("hidden", item.interiorType !== "drawers");
+      }
+    }
+
+    if (this.wizard.state.currentStep !== 3 && interiorSel) {
+      interiorSel.classList.remove("hidden");
+    }
+  }
+
+  private renderSuggestions(): void {
+    const wSugg = this.renderer.getEl("width-suggestions");
+    const hSugg = this.renderer.getEl("height-suggestions");
+    if (!wSugg) return;
+    const type = this.wizard.state.item.type;
+
+    if (type === "countertop" || type === "led") {
+      wSugg.innerHTML = [600, 1200, 1800, 2400, 3000]
+        .map(v => `<button onclick="window.__wiz?.setDim('width', ${v})" class="text-xs bg-slate-700 px-2 py-1 rounded-md cursor-pointer text-slate-200">${v} mm</button>`)
+        .join("");
+    } else {
+      const widths = [300, 450, 600, 800, 900];
+      const heights = type === "top" ? [360, 720, 960] : [720, 820];
+      wSugg.innerHTML = widths
+        .map(v => `<button onclick="window.__wiz?.setDim('width', ${v})" class="text-xs bg-slate-700 px-2 py-1 rounded-md cursor-pointer text-slate-200">${v}</button>`)
+        .join("");
+      if (hSugg) {
+        hSugg.innerHTML = heights
+          .map(v => `<button onclick="window.__wiz?.setDim('height', ${v})" class="text-xs bg-slate-700 px-2 py-1 rounded-md cursor-pointer text-slate-200">${v}</button>`)
+          .join("");
+      }
+    }
+  }
+
+  // ── interior / preview ───────────────────────────────
+
+  private updateInteriorUI(): void {
+    const pBox = this.renderer.getEl("preview-box");
+    const alertEl = this.renderer.getEl("interior-validation-alert");
+    const btnNext = this.renderer.getEl<HTMLButtonElement>("btn-wizard-next");
+    const item = this.wizard.state.item;
+    if (!pBox) return;
+
+    if (!item.isLinear && item.interiorType === "drawers") {
+      const used = item.totalDrawerHeight;
+      const diff = item.drawerHeightRemaining;
+
+      this.renderer.setText("info-val-used", String(used));
+      const statusEl = this.renderer.getEl("info-val-status");
+      if (statusEl) {
+        statusEl.innerText = diff > 0 ? `Luz: ${diff}mm` : "Idealnie: 0mm";
+        statusEl.className = diff > 0 ? "font-bold text-amber-500" : "font-bold text-emerald-600";
+      }
+
+      if (used > item.dimensions.height) {
+        if (alertEl) { alertEl.className = "p-2 bg-red-950/30 text-red-400 rounded-lg text-xs"; alertEl.innerText = "⚠️ Szuflady przekraczają gabaryt!"; }
+        if (btnNext) btnNext.disabled = true;
+      } else {
+        if (alertEl) { alertEl.className = "p-2 bg-green-950/30 text-green-400 rounded-lg text-xs"; alertEl.innerText = "✓ Gabaryty szuflad poprawne."; }
+        if (btnNext) btnNext.disabled = false;
+      }
+    } else {
+      if (alertEl) { alertEl.className = "p-2 bg-green-950/30 text-green-400 rounded-lg text-xs"; alertEl.innerText = "✓ Element poprawny konstrukcyjnie."; }
+      if (btnNext) btnNext.disabled = false;
+    }
+
+    pBox.className = "w-full bg-slate-900/20 p-4 rounded-2xl flex items-center justify-center";
+    pBox.innerHTML = this.wizard.preview;
+    this.renderDrawerSliders();
+  }
+
+  private renderDrawerSliders(): void {
+    const container = this.renderer.getEl("drawer-sliders-container");
+    if (!container) return;
+    const item = this.wizard.state.item;
+
+    this.renderer.setText("lbl-drawers-count", String(item.drawersCount));
+    container.innerHTML = "";
+
+    item.drawerHeights.forEach((hVal, idx) => {
+      const row = document.createElement("div");
+      row.className = "space-y-1 bg-slate-900 p-2.5 rounded-lg border border-slate-800";
+      row.innerHTML = `
+        <div class="flex justify-between text-xs font-bold text-slate-300">
+          <span>Szuflada nr ${idx + 1}</span>
+          <span class="font-mono text-blue-400">${hVal} mm</span>
+        </div>
+        <input type="range" min="60" max="${item.dimensions.height}" value="${hVal}" data-idx="${idx}" class="drawer-single-slider w-full accent-blue-600 cursor-pointer">
+      `;
+      container.appendChild(row);
+    });
+
+    container.querySelectorAll(".drawer-single-slider").forEach(slider => {
+      slider.addEventListener("input", (e) => {
+        const idx = parseInt((e.target as HTMLElement).dataset.idx ?? "0");
+        const val = parseInt((e.target as HTMLInputElement).value);
+        item.setDrawerHeight(idx, val);
+        this.renderDrawerSliders();
+        this.updateInteriorUI();
+      });
+    });
+  }
+
+  // ── exposed for inline onclick ───────────────────────
+
+  setDim(field: "width" | "height", value: number): void {
+    this.wizard.setDimension(field, value);
+    this.renderer.setVal(`input-${field}`, value);
+    this.renderDrawerSliders();
+    this.updateInteriorUI();
+  }
+}
